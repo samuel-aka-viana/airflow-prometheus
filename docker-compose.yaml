@@ -307,7 +307,7 @@ services:
     ports:
       - "29090:9090"
     volumes:
-      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
+      - ./configs/prometheus-config.yml:/etc/prometheus/prometheus.yml
 
   grafana:
     image: grafana/grafana:8.2.4
@@ -324,18 +324,6 @@ services:
       - ./grafana/volume/provisioning:/grafana/provisioning
     depends_on:
       - prometheus
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.57
-    container_name: "breeze-jaeger"
-    environment:
-      COLLECTOR_OTLP_ENABLED: true
-      COLLLECTOR_ZIPKIN_HOST_PORT: 9411
-    ports:
-      - "36686:16686"
-      - "34317:4317"
-      - "34318:4318"
-      - "39422:9422"
   
   statsd-exporter:
     image: quay.io/prometheus/statsd-exporter:v0.26.0
@@ -345,7 +333,7 @@ services:
     entrypoint: ["/bin/sh", "-c", "--"]
     command: ["statsd_exporter --statsd.mapping-config=/etc/statsd_exporter_mapping.yaml"]
     volumes:
-      - ./statsd_exporter_mapping.yaml:/etc/statsd_exporter_mapping.yaml
+      - ./configs/statsd_exporter_mapping.yaml:/etc/statsd_exporter_mapping.yaml
     ports:
       - "9125:9125"
       - "9125:9125/udp"
