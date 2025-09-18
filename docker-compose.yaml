@@ -89,6 +89,10 @@ x-airflow-common:
     AIRFLOW__METRICS__STATSD_PORT: '9125'
     AIRFLOW__METRICS__STATSD_PREFIX: airflow
     AIRFLOW__METRICS__METRICS_USE_PATTERN_MATCH: 'false'
+    AIRFLOW__METRICS__OTEL_ON: 'true'
+    AIRFLOW__METRICS__OTEL_HOST: 'breeze-otel-collector'
+    AIRFLOW__METRICS__OTEL_PORT: 4318
+    AIRFLOW__METRICS__OTEL_PREFIX: 'airflow'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -324,7 +328,19 @@ services:
       - ./grafana/volume/provisioning:/grafana/provisioning
     depends_on:
       - prometheus
-  
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.103.0
+    container_name: breeze-otel-collector
+    command: [ "--config=/etc/otelcol/config.yaml" ]
+    volumes:
+      - ./configs/otelcol.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "8889:8889"
+    restart: always
+    depends_on:
+      - prometheus
+
   statsd-exporter:
     image: quay.io/prometheus/statsd-exporter:v0.26.0
     labels:

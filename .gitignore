@@ -2,3 +2,6 @@ __pycache__/
 config/*
 logs/*
 plugins/*
+.venv
+.idea
+.vscode
