@@ -1,0 +1,330 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: airflow
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      # OTLP receiver for metrics and traces
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+          grpc:
+            endpoint: 0.0.0.0:4317
+      
+      # Prometheus receiver to scrape metrics
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'airflow-pods'
+              kubernetes_sd_configs:
+                - role: pod
+                  namespaces:
+                    names:
+                      - airflow
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                  action: keep
+                  regex: true
+                - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                  action: replace
+                  target_label: __metrics_path__
+                  regex: (.+)
+                - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                  action: replace
+                  regex: ([^:]+)(?::\d+)?;(\d+)
+                  replacement: $1:$2
+                  target_label: __address__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - source_labels: [__meta_kubernetes_namespace]
+                  action: replace
+                  target_label: kubernetes_namespace
+                - source_labels: [__meta_kubernetes_pod_name]
+                  action: replace
+                  target_label: kubernetes_pod_name
+            
+            - job_name: 'statsd-exporter'
+              static_configs:
+                - targets: ['airflow-statsd-exporter:9102']
+                  labels:
+                    service: 'statsd-exporter'
+    
+    processors:
+      # Batch processor to batch telemetry data
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+      
+      # Memory limiter to prevent OOM
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+        spike_limit_mib: 128
+      
+      # Resource processor to add attributes
+      resource:
+        attributes:
+          - key: cluster.name
+            value: airflow-k8s
+            action: insert
+          - key: environment
+            value: production
+            action: insert
+      
+      # Attributes processor for metric labels
+      attributes:
+        actions:
+          - key: airflow_cluster
+            value: kubernetes
+            action: insert
+    
+    exporters:
+      # Prometheus exporter
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        namespace: airflow
+        const_labels:
+          cluster: kubernetes
+          environment: production
+        resource_to_telemetry_conversion:
+          enabled: true
+      
+      # Logging exporter for debugging
+      logging:
+        loglevel: info
+      
+      # OTLP exporter (optional - for sending to another collector)
+      otlp:
+        endpoint: "jaeger-collector:4317"
+        tls:
+          insecure: true
+    
+    extensions:
+      # Health check extension
+      health_check:
+        endpoint: 0.0.0.0:13133
+        path: "/health"
+      
+      # Performance profiler
+      pprof:
+        endpoint: 0.0.0.0:1777
+      
+      # zPages extension for debugging
+      zpages:
+        endpoint: 0.0.0.0:55679
+    
+    service:
+      extensions: [health_check, pprof, zpages]
+      
+      pipelines:
+        # Metrics pipeline
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [memory_limiter, batch, resource, attributes]
+          exporters: [prometheus, logging]
+        
+        # Traces pipeline
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [otlp, logging]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: airflow
+  labels:
+    app: otel-collector
+    component: monitoring
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+        component: monitoring
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8889"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector-contrib:0.103.0
+        args:
+          - "--config=/conf/otel-collector-config.yaml"
+        ports:
+        - containerPort: 4317  # OTLP gRPC
+          protocol: TCP
+          name: otlp-grpc
+        - containerPort: 4318  # OTLP HTTP
+          protocol: TCP
+          name: otlp-http
+        - containerPort: 8889  # Prometheus metrics
+          protocol: TCP
+          name: prometheus
+        - containerPort: 13133 # Health check
+          protocol: TCP
+          name: health
+        - containerPort: 55679 # zPages
+          protocol: TCP
+          name: zpages
+        volumeMounts:
+        - name: otel-config
+          mountPath: /conf
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 13133
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 13133
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        env:
+        - name: GOGC
+          value: "80"
+        - name: K8S_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: K8S_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      volumes:
+      - name: otel-config
+        configMap:
+          name: otel-collector-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: airflow
+  labels:
+    app: otel-collector
+    component: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: otlp-grpc
+    port: 4317
+    targetPort: 4317
+    protocol: TCP
+  - name: otlp-http
+    port: 4318
+    targetPort: 4318
+    protocol: TCP
+  - name: prometheus
+    port: 8889
+    targetPort: 8889
+    protocol: TCP
+  - name: health
+    port: 13133
+    targetPort: 13133
+    protocol: TCP
+  - name: zpages
+    port: 55679
+    targetPort: 55679
+    protocol: TCP
+  selector:
+    app: otel-collector
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: airflow
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-collector
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- apiGroups:
+  - "extensions"
+  - "networking.k8s.io"
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-collector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-collector
+subjects:
+- kind: ServiceAccount
+  name: otel-collector
+  namespace: airflow
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: otel-collector
+  namespace: airflow
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: otel-collector
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

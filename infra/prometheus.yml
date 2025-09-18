@@ -1,0 +1,321 @@
+# Prometheus Helm Chart Values
+# Using kube-prometheus-stack for complete monitoring solution
+# https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack
+
+# Default values for kube-prometheus-stack
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false
+    kubeApiserver: true
+    kubeApiserverAvailability: true
+    kubeApiserverSlos: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeScheduler: true
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+
+# Prometheus Operator
+prometheusOperator:
+  enabled: true
+  admissionWebhooks:
+    enabled: true
+    patch:
+      enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Prometheus Configuration
+prometheus:
+  enabled: true
+
+  prometheusSpec:
+    # Resource requests and limits
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 1000m
+        memory: 4Gi
+
+    # Retention configuration
+    retention: 30d
+    retentionSize: "10GB"
+
+    # Storage configuration
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+
+    # Scrape configurations
+    additionalScrapeConfigs:
+      # Airflow components scraping
+      - job_name: 'airflow-webserver'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - airflow
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_component]
+            action: keep
+            regex: webserver
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+
+      # StatsD Exporter scraping
+      - job_name: 'statsd-exporter'
+        static_configs:
+          - targets:
+              - 'airflow-statsd-exporter.airflow:9102'
+            labels:
+              service: 'statsd-exporter'
+              airflow_id: 'airflow'
+
+      # OpenTelemetry Collector scraping
+      - job_name: 'otel-collector'
+        static_configs:
+          - targets:
+              - 'otel-collector.airflow:8889'
+            labels:
+              service: 'otel-collector'
+
+      # Airflow Scheduler
+      - job_name: 'airflow-scheduler'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - airflow
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_component]
+            action: keep
+            regex: scheduler
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            target_label: __address__
+            replacement: $1:8974  # Scheduler health check port
+
+    # Service monitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+
+    # Pod monitors
+    podMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    podMonitorNamespaceSelector: {}
+
+    # Rules
+    ruleSelectorNilUsesHelmValues: false
+    ruleSelector: {}
+    ruleNamespaceSelector: {}
+
+    # Alert managers
+    alertingEndpoints:
+      - name: alertmanager-main
+        namespace: monitoring
+        port: web
+
+    # Replicas
+    replicas: 2
+
+    # External labels
+    externalLabels:
+      cluster: airflow-k8s
+      environment: production
+
+# Alertmanager Configuration
+alertmanager:
+  enabled: true
+
+  alertmanagerSpec:
+    replicas: 2
+    retention: 120h
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 200m
+        memory: 512Mi
+
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+
+  config:
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default-receiver'
+      routes:
+        - receiver: 'airflow-critical'
+          matchers:
+            - severity="critical"
+            - service=~"airflow.*"
+        - receiver: 'airflow-warning'
+          matchers:
+            - severity="warning"
+            - service=~"airflow.*"
+
+    receivers:
+      - name: 'default-receiver'
+
+      - name: 'airflow-critical'
+        webhook_configs:
+          - url: 'http://your-webhook-url/critical'
+            send_resolved: true
+
+      - name: 'airflow-warning'
+        email_configs:
+          - to: 'airflow-alerts@example.com'
+            from: 'prometheus@example.com'
+            smarthost: 'smtp.example.com:587'
+            auth_username: 'prometheus@example.com'
+            auth_password: 'your-password'
+            headers:
+              Subject: 'Airflow Warning Alert'
+
+# Grafana is disabled here as we'll deploy it separately
+grafana:
+  enabled: false
+
+# kube-state-metrics
+kubeStateMetrics:
+  enabled: true
+
+# node-exporter
+nodeExporter:
+  enabled: true
+
+# Additional Prometheus rules for Airflow
+additionalPrometheusRulesMap:
+  airflow-rules:
+    groups:
+      - name: airflow.rules
+        interval: 30s
+        rules:
+          - alert: AirflowSchedulerDown
+            expr: up{job="airflow-scheduler"} == 0
+            for: 5m
+            labels:
+              severity: critical
+              service: airflow
+            annotations:
+              summary: "Airflow Scheduler is down"
+              description: "Airflow Scheduler has been down for more than 5 minutes."
+
+          - alert: AirflowWebserverDown
+            expr: up{job="airflow-webserver"} == 0
+            for: 5m
+            labels:
+              severity: critical
+              service: airflow
+            annotations:
+              summary: "Airflow Webserver is down"
+              description: "Airflow Webserver has been down for more than 5 minutes."
+
+          - alert: AirflowHighFailureRate
+            expr: rate(af_agg_ti_failures[5m]) > 0.1
+            for: 10m
+            labels:
+              severity: warning
+              service: airflow
+            annotations:
+              summary: "High task failure rate in Airflow"
+              description: "Task failure rate is above 10% for the last 10 minutes."
+
+          - alert: AirflowDagImportErrors
+            expr: af_agg_dag_processing_import_errors > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: airflow
+            annotations:
+              summary: "DAG import errors detected"
+              description: "There are {{ $value }} DAG import errors."
+
+          - alert: AirflowZombieTasksKilled
+            expr: increase(af_agg_zombies_killed[1h]) > 5
+            for: 5m
+            labels:
+              severity: warning
+              service: airflow
+            annotations:
+              summary: "Multiple zombie tasks killed"
+              description: "{{ $value }} zombie tasks were killed in the last hour."
+
+          - alert: AirflowExecutorNoOpenSlots
+            expr: af_agg_executor_open_slots == 0
+            for: 10m
+            labels:
+              severity: warning
+              service: airflow
+            annotations:
+              summary: "No open executor slots"
+              description: "Airflow executor has no open slots for 10 minutes."
+
+# Service Monitor for additional scraping
+serviceMonitor:
+  enabled: true
+  namespace: airflow
+  additionalLabels:
+    app: airflow
+  selector:
+    matchLabels:
+      app: airflow
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics

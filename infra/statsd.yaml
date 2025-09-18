@@ -1,0 +1,286 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: statsd-exporter-config
+  namespace: airflow
+data:
+  statsd_mapping.yaml: |
+    mappings:
+      # Airflow StatsD metrics mappings
+      # === Counters ===
+      - match: "(.+)\\.(.+)_start$"
+        match_metric_type: counter
+        name: "af_agg_job_start"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          job_name: "$2"
+      - match: "(.+)\\.(.+)_end$"
+        match_metric_type: counter
+        name: "af_agg_job_end"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          job_name: "$2"
+      - match: "(.+)\\.operator_failures_(.+)$"
+        match_metric_type: counter
+        name: "af_agg_operator_failures"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          operator_name: "$2"
+      - match: "(.+)\\.operator_successes_(.+)$"
+        match_metric_type: counter
+        name: "af_agg_operator_successes"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          operator_name: "$2"
+      - match: "*.ti_failures"
+        match_metric_type: counter
+        name: "af_agg_ti_failures"
+        labels:
+          airflow_id: "$1"
+      - match: "*.ti_successes"
+        match_metric_type: counter
+        name: "af_agg_ti_successes"
+        labels:
+          airflow_id: "$1"
+      - match: "*.zombies_killed"
+        match_metric_type: counter
+        name: "af_agg_zombies_killed"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler_heartbeat"
+        match_metric_type: counter
+        name: "af_agg_scheduler_heartbeat"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.processes"
+        match_metric_type: counter
+        name: "af_agg_dag_processing_processes"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.tasks.killed_externally"
+        match_metric_type: counter
+        name: "af_agg_scheduler_tasks_killed_externally"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.tasks.running"
+        match_metric_type: counter
+        name: "af_agg_scheduler_tasks_running"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.tasks.starving"
+        match_metric_type: counter
+        name: "af_agg_scheduler_tasks_starving"
+        labels:
+          airflow_id: "$1"
+      - match: "*.ti.start.*.*"
+        match_metric_type: counter
+        name: "af_agg_ti_start"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+      - match: "*.ti.finish.*.*.*"
+        match_metric_type: counter
+        name: "af_agg_ti_finish"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+          state: "$4"
+      
+      # === Gauges ===
+      - match: "*.dagbag_size"
+        match_metric_type: gauge
+        name: "af_agg_dagbag_size"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.import_errors"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_import_errors"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.total_parse_time"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_total_parse_time"
+        labels:
+          airflow_id: "$1"
+      - match: "*.executor.open_slots"
+        match_metric_type: gauge
+        name: "af_agg_executor_open_slots"
+        labels:
+          airflow_id: "$1"
+      - match: "*.executor.queued_tasks"
+        match_metric_type: gauge
+        name: "af_agg_executor_queued_tasks"
+        labels:
+          airflow_id: "$1"
+      - match: "*.executor.running_tasks"
+        match_metric_type: gauge
+        name: "af_agg_executor_running_tasks"
+        labels:
+          airflow_id: "$1"
+      - match: "*.pool.open_slots.*"
+        match_metric_type: gauge
+        name: "af_agg_pool_open_slots"
+        labels:
+          airflow_id: "$1"
+          pool_name: "$2"
+      - match: "*.pool.running_slots.*"
+        match_metric_type: gauge
+        name: "af_agg_pool_running_slots"
+        labels:
+          airflow_id: "$1"
+          pool_name: "$2"
+      
+      # === Timers ===
+      - match: "*.dagrun.dependency-check.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_dependency_check"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.dag.*.*.duration"
+        match_metric_type: observer
+        name: "af_agg_dag_task_duration"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+      - match: "*.dagrun.duration.success.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_duration_success"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.dagrun.duration.failed.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_duration_failed"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.dagrun.schedule_delay.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_schedule_delay"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-statsd-exporter
+  namespace: airflow
+  labels:
+    app: statsd-exporter
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statsd-exporter
+  template:
+    metadata:
+      labels:
+        app: statsd-exporter
+        component: monitoring
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9102"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: statsd-exporter
+        image: quay.io/prometheus/statsd-exporter:v0.26.0
+        args:
+          - --statsd.mapping-config=/etc/statsd/statsd_mapping.yaml
+          - --statsd.listen-udp=:9125
+          - --statsd.listen-tcp=:9125
+          - --web.listen-address=:9102
+        ports:
+        - containerPort: 9125
+          protocol: UDP
+          name: statsd-udp
+        - containerPort: 9125
+          protocol: TCP
+          name: statsd-tcp
+        - containerPort: 9102
+          protocol: TCP
+          name: metrics
+        volumeMounts:
+        - name: statsd-config
+          mountPath: /etc/statsd
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9102
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9102
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: statsd-config
+        configMap:
+          name: statsd-exporter-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-statsd-exporter
+  namespace: airflow
+  labels:
+    app: statsd-exporter
+    component: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: statsd-udp
+    port: 9125
+    targetPort: 9125
+    protocol: UDP
+  - name: statsd-tcp
+    port: 9125
+    targetPort: 9125
+    protocol: TCP
+  - name: metrics
+    port: 9102
+    targetPort: 9102
+    protocol: TCP
+  selector:
+    app: statsd-exporter
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statsd-exporter-metrics
+  namespace: airflow
+  labels:
+    app: statsd-exporter
+    component: monitoring
+spec:
+  type: NodePort
+  ports:
+  - name: metrics
+    port: 9102
+    targetPort: 9102
+    protocol: TCP
+    nodePort: 30102
+  selector:
+    app: statsd-exporter
