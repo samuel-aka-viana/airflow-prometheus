@@ -1,36 +1,20 @@
-# Grafana Helm Chart Values
-# https://artifacthub.io/packages/helm/grafana/grafana
-
-# Grafana configuration
-replicas: 2
-
-# Admin credentials
+replicas: 1
 adminUser: admin
 adminPassword: admin
 
-# Service configuration
 service:
-  type: LoadBalancer
+  type: NodePort
   port: 80
   targetPort: 3000
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
 
-# Ingress configuration
 ingress:
   enabled: true
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  ingressClassName: nginx
+  annotations: {}
   hosts:
-    - grafana.example.com
-  tls:
-    - secretName: grafana-tls
-      hosts:
-        - grafana.example.com
+    - grafana.local.test
+  tls: []
 
-# Persistence
 persistence:
   enabled: true
   storageClassName: standard
@@ -38,7 +22,6 @@ persistence:
     - ReadWriteOnce
   size: 10Gi
 
-# Resource configuration
 resources:
   requests:
     cpu: 250m
@@ -47,64 +30,52 @@ resources:
     cpu: 500m
     memory: 1Gi
 
-# Grafana.ini configuration
 grafana.ini:
   server:
-    root_url: https://grafana.example.com
+    root_url: http://grafana.local.test
     enable_gzip: true
-
   auth:
     disable_login_form: false
     disable_signout_menu: false
-
   auth.anonymous:
     enabled: false
     org_role: Viewer
-
   auth.basic:
     enabled: true
-
   analytics:
     reporting_enabled: false
     check_for_updates: false
-
   security:
     admin_user: admin
     admin_password: admin
     secret_key: "your-secret-key-here"
-
   users:
     allow_sign_up: false
     allow_org_create: false
     auto_assign_org: true
     auto_assign_org_role: Viewer
-
   database:
     type: sqlite3
     path: grafana.db
-
   paths:
     data: /var/lib/grafana/data
     logs: /var/log/grafana
     plugins: /var/lib/grafana/plugins
     provisioning: /etc/grafana/provisioning
-
   log:
     mode: console
     level: info
-
   alerting:
     enabled: true
     execute_alerts: true
 
-# Data sources configuration
 datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
       - name: Prometheus
         type: prometheus
-        url: http://prometheus-kube-prometheus-prometheus.monitoring:9090
+        url: http://prometheus.monitoring:9090
         access: proxy
         isDefault: true
         editable: true
@@ -112,7 +83,6 @@ datasources:
           timeInterval: "30s"
           queryTimeout: "60s"
           httpMethod: "POST"
-
       - name: Loki
         type: loki
         url: http://loki.monitoring:3100
@@ -120,41 +90,37 @@ datasources:
         editable: true
         jsonData:
           maxLines: 1000
-
       - name: Jaeger
         type: jaeger
         url: http://jaeger-query.monitoring:16686
         access: proxy
         editable: true
 
-# Dashboard providers configuration
 dashboardProviders:
   dashboardproviders.yaml:
     apiVersion: 1
     providers:
-      - name: 'airflow'
+      - name: "airflow"
         orgId: 1
-        folder: 'Airflow'
+        folder: "Airflow"
         type: file
         disableDeletion: false
         updateIntervalSeconds: 10
         allowUiUpdates: true
         options:
           path: /var/lib/grafana/dashboards/airflow
-
-      - name: 'kubernetes'
+      - name: "kubernetes"
         orgId: 1
-        folder: 'Kubernetes'
+        folder: "Kubernetes"
         type: file
         disableDeletion: false
         updateIntervalSeconds: 10
         allowUiUpdates: true
         options:
           path: /var/lib/grafana/dashboards/kubernetes
-
-      - name: 'system'
+      - name: "system"
         orgId: 1
-        folder: 'System'
+        folder: "System"
         type: file
         disableDeletion: false
         updateIntervalSeconds: 10
@@ -162,37 +128,31 @@ dashboardProviders:
         options:
           path: /var/lib/grafana/dashboards/system
 
-# Dashboards configuration
 dashboards:
   airflow:
     airflow-cluster:
-      gnetId: 15090  # Airflow cluster dashboard from Grafana.com
+      gnetId: 15090
       revision: 1
       datasource: Prometheus
-
     airflow-dag:
-      gnetId: 15091  # Airflow DAG dashboard from Grafana.com
+      gnetId: 15091
       revision: 1
       datasource: Prometheus
-
   kubernetes:
     k8s-cluster:
-      gnetId: 7249  # Kubernetes Cluster Dashboard
+      gnetId: 7249
       revision: 1
       datasource: Prometheus
-
     k8s-pods:
-      gnetId: 6417  # Kubernetes Pods Dashboard
+      gnetId: 6417
       revision: 1
       datasource: Prometheus
-
   system:
     node-exporter:
-      gnetId: 1860  # Node Exporter Full Dashboard
+      gnetId: 1860
       revision: 29
       datasource: Prometheus
 
-# Sidecar configuration for dynamic dashboard loading
 sidecar:
   dashboards:
     enabled: true
@@ -201,34 +161,28 @@ sidecar:
     searchNamespace: ALL
     provider:
       foldersFromFilesStructure: true
-
   datasources:
     enabled: true
     label: grafana_datasource
     searchNamespace: ALL
 
-# Environment variables
 env:
   GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel"
 
-# RBAC
 rbac:
   create: true
   pspEnabled: false
   namespaced: false
 
-# Service Account
 serviceAccount:
   create: true
   name: grafana
 
-# Pod annotations
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "3000"
   prometheus.io/path: "/metrics"
 
-# Liveness and readiness probes
 livenessProbe:
   httpGet:
     path: /api/health
@@ -244,13 +198,10 @@ readinessProbe:
   initialDelaySeconds: 30
   timeoutSeconds: 10
 
-# Node selector
 nodeSelector: {}
 
-# Tolerations
 tolerations: []
 
-# Affinity
 affinity:
   podAntiAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -264,7 +215,6 @@ affinity:
                   - grafana
           topologyKey: kubernetes.io/hostname
 
-# Additional volumes and mounts for custom dashboards
 extraVolumes:
   - name: airflow-dashboards
     configMap:
@@ -275,7 +225,6 @@ extraVolumeMounts:
     mountPath: /var/lib/grafana/dashboards/airflow
     readOnly: true
 
-# Plugin installation
 plugins:
   - grafana-clock-panel
   - grafana-simple-json-datasource
@@ -284,7 +233,6 @@ plugins:
   - grafana-worldmap-panel
   - grafana-polystat-panel
 
-# SMTP Configuration for alerts
 smtp:
   existingSecret: ""
   userKey: "user"

@@ -40,7 +40,7 @@ env:
     value: "false"
   # Tracing Configuration
   - name: AIRFLOW__TRACES__OTEL_ON
-    value: "true"
+    value: "false"
   - name: AIRFLOW__TRACES__OTEL_HOST
     value: "otel-collector"
   - name: AIRFLOW__TRACES__OTEL_PORT
@@ -79,7 +79,7 @@ webserver:
       memory: "1Gi"
       cpu: "500m"
   service:
-    type: LoadBalancer
+    type: NodePort
     port: 8080
 
   # Liveness and readiness probes
@@ -156,16 +156,13 @@ ingress:
   enabled: true
   web:
     enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingressClassName: nginx
+    annotations: {}
     hosts:
-      - name: airflow.example.com
+      - name: airflow.local.test
         tls:
-          enabled: true
-          secretName: airflow-tls
+          enabled: false
     path: /
-
 # Security context
 securityContext:
   runAsUser: 50000

@@ -6,7 +6,6 @@ metadata:
 data:
   otel-collector-config.yaml: |
     receivers:
-      # OTLP receiver for metrics and traces
       otlp:
         protocols:
           http:
@@ -14,7 +13,6 @@ data:
           grpc:
             endpoint: 0.0.0.0:4317
       
-      # Prometheus receiver to scrape metrics
       prometheus:
         config:
           scrape_configs:
@@ -27,7 +25,7 @@ data:
               relabel_configs:
                 - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
                   action: keep
-                  regex: true
+                  regex: "true"
                 - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
                   action: replace
                   target_label: __metrics_path__
