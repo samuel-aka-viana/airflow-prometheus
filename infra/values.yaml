@@ -50,6 +50,8 @@ env:
   # Scheduler Configuration
   - name: AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK
     value: "true"
+  - name: AIRFLOW__METRICS__METRICS_USE_PATTERN_MATCH
+    value: "false"
 
 # Airflow database - PostgreSQL
 postgresql:
@@ -171,10 +173,10 @@ securityContext:
   fsGroup: 50000
 
 # Pod annotations for Prometheus scraping
-podAnnotations:
-  prometheus.io/scrape: "true"
-  prometheus.io/port: "8080"
-  prometheus.io/path: "/metrics"
+#podAnnotations:
+#  prometheus.io/scrape: "true"
+#  prometheus.io/port: "8080"
+#  prometheus.io/path: "/metrics"
 
 # Service Account
 serviceAccount:
