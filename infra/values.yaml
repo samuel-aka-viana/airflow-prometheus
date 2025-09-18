@@ -53,24 +53,30 @@ env:
   - name: AIRFLOW__METRICS__METRICS_USE_PATTERN_MATCH
     value: "false"
 
-# Airflow database - PostgreSQL
+# PostgreSQL Configuration with working image
 postgresql:
   enabled: true
+  image:
+    tag: "16.2.0-debian-12-r20"
   auth:
+    enablePostgresUser: true
+    postgresPassword: postgres
     username: airflow
     password: airflow
     database: airflow
-  persistence:
-    enabled: true
-    size: 10Gi
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "standard"
+      size: 5Gi
 
-# Redis for Celery backend (if needed)
+# Redis for Celery backend (disabled for KubernetesExecutor)
 redis:
   enabled: false
 
 # Airflow webserver configuration
 webserver:
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       memory: "512Mi"
@@ -80,21 +86,30 @@ webserver:
       cpu: "500m"
   service:
     type: NodePort
-    port: 8080
-
-  # Liveness and readiness probes
+    ports:
+      - name: airflow-ui
+        port: 8080
+        targetPort: airflow-ui
+        nodePort: 30080
   livenessProbe:
-    enabled: true
     initialDelaySeconds: 60
     periodSeconds: 30
   readinessProbe:
-    enabled: true
     initialDelaySeconds: 30
     periodSeconds: 10
+  # Default user configuration
+  defaultUser:
+    enabled: true
+    role: Admin
+    username: admin
+    email: admin@example.com
+    firstName: Admin
+    lastName: User
+    password: admin
 
 # Airflow scheduler configuration
 scheduler:
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       memory: "512Mi"
@@ -102,10 +117,7 @@ scheduler:
     limits:
       memory: "1Gi"
       cpu: "500m"
-
-  # Enable scheduler health check
   livenessProbe:
-    enabled: true
     initialDelaySeconds: 60
     periodSeconds: 30
 
@@ -134,7 +146,6 @@ dags:
     wait: 60
     containerName: git-sync
     uid: 65533
-
     # Resources for git-sync container
     resources:
       requests:
@@ -153,7 +164,6 @@ logs:
 
 # Ingress configuration
 ingress:
-  enabled: true
   web:
     enabled: true
     ingressClassName: nginx
@@ -163,17 +173,14 @@ ingress:
         tls:
           enabled: false
     path: /
-# Security context
-securityContext:
-  runAsUser: 50000
-  runAsGroup: 50000
-  fsGroup: 50000
 
-# Pod annotations for Prometheus scraping
-#podAnnotations:
-#  prometheus.io/scrape: "true"
-#  prometheus.io/port: "8080"
-#  prometheus.io/path: "/metrics"
+# Security context
+securityContexts:
+  pod:
+    runAsUser: 50000
+    runAsGroup: 50000
+    fsGroup: 50000
+  container: {}
 
 # Service Account
 serviceAccount:
@@ -185,37 +192,18 @@ rbac:
   create: true
   createSCCRoleBinding: false
 
-# Airflow users configuration
-users:
-  - username: admin
-    password: admin
-    role: Admin
-    email: admin@example.com
-    firstName: Admin
-    lastName: User
-
-# Extra pip packages to install
-extraPipPackages:
-  - apache-airflow[otel]==2.10.3
-  - apache-airflow[statsd]==2.10.3
-
-# Config for KubernetesExecutor
+# Airflow configuration
 config:
   core:
     dags_folder: /opt/airflow/dags
     load_examples: false
     executor: KubernetesExecutor
 
-  kubernetes:
-    namespace: airflow
-    delete_worker_pods: true
-    delete_worker_pods_on_failure: false
-    worker_container_repository: apache/airflow
-    worker_container_tag: 2.10.3-python3.11
-
   kubernetes_executor:
     namespace: airflow
     delete_worker_pods: true
+    worker_container_repository: apache/airflow
+    worker_container_tag: 2.10.3-python3.11
 
   webserver:
     expose_config: true
@@ -231,18 +219,32 @@ cleanup:
   enabled: true
   schedule: "*/15 * * * *"
 
-# Flower configuration (for monitoring if using CeleryExecutor)
+# Flower configuration (disabled for KubernetesExecutor)
 flower:
   enabled: false
 
-# StatsD configuration (to be deployed separately)
+# StatsD configuration
 statsd:
-  enabled: false  # We'll deploy our own StatsD exporter
+  enabled: true
 
-# Prometheus configuration
-prometheus:
-  enabled: false  # We'll deploy our own Prometheus
+# Workers configuration (for KubernetesExecutor, these apply to worker pods)
+workers:
+  # This setting tells kubernetes that its ok to evict when it wants to scale a node down
+  safeToEvict: true
+  # Resources will be applied to KubernetesExecutor worker pods
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
 
-# Grafana configuration
-grafana:
-  enabled: false  # We'll deploy our own Grafana
+# Allow pod launching for KubernetesExecutor
+allowPodLaunching: true
+
+# Enable built-in secret environment variables
+enableBuiltInSecretEnvVars:
+  AIRFLOW__CORE__FERNET_KEY: true
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: true
+  AIRFLOW__WEBSERVER__SECRET_KEY: true
