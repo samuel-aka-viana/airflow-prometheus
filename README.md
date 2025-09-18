@@ -22,7 +22,7 @@ Certifique-se de ter o **Docker** e o **Docker Compose** instalados em seu ambie
 
 1. Clone o repositório:
 ```bash
-   git clone git@github.com:ricardo-jr37/airflow_monitoring.git
+   git clone https://github.com/samuel-aka-viana/airflow-prometheus.git
    cd airflow_monitoring
 ```
 2. Suba o ambiente com Docker Compose:
