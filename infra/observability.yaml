@@ -1,0 +1,561 @@
+---
+# Namespace (se não existir)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: airflow
+---
+# StatsD Exporter ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: statsd-exporter-config
+  namespace: airflow
+data:
+  statsd_mapping.yml: |
+    mappings:
+      # Airflow StatsD metrics mappings (https://airflow.apache.org/docs/apache-airflow/stable/logging-monitoring/metrics.html)
+      # === Counters ===
+      - match: "(.+)\\.(.+)_start$"
+        match_metric_type: counter
+        name: "af_agg_job_start"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          job_name: "$2"
+      - match: "(.+)\\.(.+)_end$"
+        match_metric_type: counter
+        name: "af_agg_job_end"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          job_name: "$2"
+      - match: "(.+)\\.operator_failures_(.+)$"
+        match_metric_type: counter
+        name: "af_agg_operator_failures"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          operator_name: "$2"
+      - match: "(.+)\\.operator_successes_(.+)$"
+        match_metric_type: counter
+        name: "af_agg_operator_successes"
+        match_type: regex
+        labels:
+          airflow_id: "$1"
+          operator_name: "$2"
+      - match: "*.ti_failures"
+        match_metric_type: counter
+        name: "af_agg_ti_failures"
+        labels:
+          airflow_id: "$1"
+      - match: "*.ti_successes"
+        match_metric_type: counter
+        name: "af_agg_ti_successes"
+        labels:
+          airflow_id: "$1"
+      - match: "*.zombies_killed"
+        match_metric_type: counter
+        name: "af_agg_zombies_killed"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler_heartbeat"
+        match_metric_type: counter
+        name: "af_agg_scheduler_heartbeat"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.processes"
+        match_metric_type: counter
+        name: "af_agg_dag_processing_processes"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.tasks.killed_externally"
+        match_metric_type: counter
+        name: "af_agg_scheduler_tasks_killed_externally"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.tasks.running"
+        match_metric_type: counter
+        name: "af_agg_scheduler_tasks_running"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.tasks.starving"
+        match_metric_type: counter
+        name: "af_agg_scheduler_tasks_starving"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.orphaned_tasks.cleared"
+        match_metric_type: counter
+        name: "af_agg_scheduler_orphaned_tasks_cleared"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.orphaned_tasks.adopted"
+        match_metric_type: counter
+        name: "af_agg_scheduler_orphaned_tasks_adopted"
+        labels:
+          airflow_id: "$1"
+      - match: "*.scheduler.critical_section_busy"
+        match_metric_type: counter
+        name: "af_agg_scheduler_critical_section_busy"
+        labels:
+          airflow_id: "$1"
+      - match: "*.sla_email_notification_failure"
+        match_metric_type: counter
+        name: "af_agg_sla_email_notification_failure"
+        labels:
+          airflow_id: "$1"
+      - match: "*.ti.start.*.*"
+        match_metric_type: counter
+        name: "af_agg_ti_start"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+      - match: "*.ti.finish.*.*.*"
+        match_metric_type: counter
+        name: "af_agg_ti_finish"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+          state: "$4"
+      - match: "*.dag.callback_exceptions"
+        match_metric_type: counter
+        name: "af_agg_dag_callback_exceptions"
+        labels:
+          airflow_id: "$1"
+      - match: "*.celery.task_timeout_error"
+        match_metric_type: counter
+        name: "af_agg_celery_task_timeout_error"
+        labels:
+          airflow_id: "$1"
+      
+      # === Gauges ===
+      - match: "*.dagbag_size"
+        match_metric_type: gauge
+        name: "af_agg_dagbag_size"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.import_errors"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_import_errors"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.total_parse_time"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_total_parse_time"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dag_processing.last_runtime.*"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_last_runtime"
+        labels:
+          airflow_id: "$1"
+          dag_file: "$2"
+      - match: "*.dag_processing.last_run.seconds_ago.*"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_last_run_seconds"
+        labels:
+          airflow_id: "$1"
+          dag_file: "$2"
+      - match: "*.dag_processing.processor_timeouts"
+        match_metric_type: gauge
+        name: "af_agg_dag_processing_processor_timeouts"
+        labels:
+          airflow_id: "$1"
+      - match: "*.executor.open_slots"
+        match_metric_type: gauge
+        name: "af_agg_executor_open_slots"
+        labels:
+          airflow_id: "$1"
+      - match: "*.executor.queued_tasks"
+        match_metric_type: gauge
+        name: "af_agg_executor_queued_tasks"
+        labels:
+          airflow_id: "$1"
+      - match: "*.executor.running_tasks"
+        match_metric_type: gauge
+        name: "af_agg_executor_running_tasks"
+        labels:
+          airflow_id: "$1"
+      - match: "*.pool.open_slots.*"
+        match_metric_type: gauge
+        name: "af_agg_pool_open_slots"
+        labels:
+          airflow_id: "$1"
+          pool_name: "$2"
+      - match: "*.pool.queued_slots.*"
+        match_metric_type: gauge
+        name: "af_agg_pool_queued_slots"
+        labels:
+          airflow_id: "$1"
+          pool_name: "$2"
+      - match: "*.pool.running_slots.*"
+        match_metric_type: gauge
+        name: "af_agg_pool_running_slots"
+        labels:
+          airflow_id: "$1"
+          pool_name: "$2"
+      - match: "*.pool.starving_tasks.*"
+        match_metric_type: gauge
+        name: "af_agg_pool_starving_tasks"
+        labels:
+          airflow_id: "$1"
+          pool_name: "$2"
+      
+      # === Timers ===
+      - match: "*.dagrun.dependency-check.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_dependency_check"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.dag.*.*.duration"
+        match_metric_type: observer
+        name: "af_agg_dag_task_duration"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+          task_id: "$3"
+      - match: "*.dag_processing.last_duration.*"
+        match_metric_type: observer
+        name: "af_agg_dag_processing_duration"
+        labels:
+          airflow_id: "$1"
+          dag_file: "$2"
+      - match: "*.dagrun.duration.success.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_duration_success"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.dagrun.duration.failed.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_duration_failed"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.dagrun.schedule_delay.*"
+        match_metric_type: observer
+        name: "af_agg_dagrun_schedule_delay"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+      - match: "*.scheduler.critical_section_duration"
+        match_metric_type: observer
+        name: "af_agg_scheduler_critical_section_duration"
+        labels:
+          airflow_id: "$1"
+      - match: "*.dagrun.*.first_task_scheduling_delay"
+        match_metric_type: observer
+        name: "af_agg_dagrun_first_task_scheduling_delay"
+        labels:
+          airflow_id: "$1"
+          dag_id: "$2"
+
+---
+# StatsD Exporter Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statsd-exporter
+  namespace: airflow
+  labels:
+    app: statsd-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statsd-exporter
+  template:
+    metadata:
+      labels:
+        app: statsd-exporter
+    spec:
+      containers:
+      - name: statsd-exporter
+        image: quay.io/prometheus/statsd-exporter:v0.26.0
+        ports:
+        - containerPort: 9125
+          name: statsd
+          protocol: UDP
+        - containerPort: 9102
+          name: metrics
+        args:
+        - "--statsd.mapping-config=/etc/statsd_exporter_mapping.yaml"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/statsd_exporter_mapping.yaml
+          subPath: statsd_mapping.yml
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: statsd-exporter-config
+---
+# StatsD Exporter Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow-statsd
+  namespace: airflow
+  labels:
+    app: statsd-exporter
+spec:
+  ports:
+  - port: 9125
+    targetPort: 9125
+    protocol: UDP
+    name: statsd
+  - port: 9102
+    targetPort: 9102
+    protocol: TCP
+    name: metrics
+  selector:
+    app: statsd-exporter
+---
+# Prometheus ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: airflow
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 60s
+      evaluation_interval: 60s
+      scrape_timeout: 15s
+    
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets:
+              - 'localhost:9090'
+      
+      - job_name: statsd-exporter
+        scheme: http
+        metrics_path: /metrics
+        static_configs:
+          - targets:
+              - 'airflow-statsd:9102'
+            labels:
+              airflow_id: airflow
+        tls_config:
+          insecure_skip_verify: true
+---
+# Prometheus PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-data
+  namespace: airflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Prometheus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: airflow
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus/'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--storage.tsdb.retention.time=200h'
+        - '--web.enable-lifecycle'
+        volumeMounts:
+        - name: prometheus-config-volume
+          mountPath: /etc/prometheus/
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: prometheus-config-volume
+        configMap:
+          defaultMode: 420
+          name: prometheus-config
+      - name: prometheus-storage-volume
+        persistentVolumeClaim:
+          claimName: prometheus-data
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: airflow
+  labels:
+    app: prometheus
+spec:
+  ports:
+  - port: 9090
+    targetPort: 9090
+    name: prometheus
+  selector:
+    app: prometheus
+---
+# Grafana ConfigMap for Datasources
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: airflow
+data:
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus:9090
+        isDefault: true
+        editable: true
+---
+# Grafana ConfigMap for Dashboard Provisioning
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-providers
+  namespace: airflow
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: dashboards
+        folder: General
+        type: file
+        editable: true
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: true
+---
+# Grafana PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  namespace: airflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Grafana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: airflow
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:8.2.4
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_NAME
+          value: "Main Org."
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        - name: GF_PATHS_PROVISIONING
+          value: "/etc/grafana/provisioning"
+        volumeMounts:
+        - name: grafana-data
+          mountPath: /var/lib/grafana
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: grafana-dashboard-providers
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafana-dashboards
+          mountPath: /var/lib/grafana/dashboards
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+      volumes:
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-data
+      - name: grafana-datasources
+        configMap:
+          name: grafana-datasources
+      - name: grafana-dashboard-providers
+        configMap:
+          name: grafana-dashboard-providers
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-dashboards
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: airflow
+  labels:
+    app: grafana
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: grafana
+  selector:
+    app: grafana
+  type: LoadBalancer
