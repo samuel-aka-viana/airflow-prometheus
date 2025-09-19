@@ -9,6 +9,7 @@ images:
 
 config:
   core:
+    parallelism: 64
     executor: KubernetesExecutor
     fernet_key: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
     dags_are_paused_at_creation: true
@@ -40,6 +41,23 @@ config:
     delete_worker_pods: true
     delete_worker_pods_on_success: false
     delete_worker_pods_on_failure: false
+
+kubernetesPodTemplate: |
+  apiVersion: v1
+  kind: Pod
+  spec:
+    restartPolicy: Never
+    containers:
+      - name: base
+        image: apache/airflow:2.10.5
+        resources:
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "3Gi"
+
 
 webserverSecretKey: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
 
@@ -85,22 +103,22 @@ redis:
 scheduler:
   replicas: 1
   resources:
-    limits:
-      cpu: 1000m
-      memory: 2Gi
     requests:
-      cpu: 500m
-      memory: 1Gi
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
 
 webserver:
   replicas: 1
   resources:
-    limits:
-      cpu: 500m
-      memory: 1Gi
     requests:
-      cpu: 250m
-      memory: 512Mi
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
   service:
     type: ClusterIP
     ports:
