@@ -48,40 +48,48 @@ Assim que as DAGs estiverem em execução, o Prometheus coletará as métricas e
 
 
 # Delete deployments
-kubectl delete deployments --all-namespaces -l app=airflow
+kubectl delete deployments  -n airflow --all
 kubectl delete deployments --all-namespaces | grep airflow
 
 # Delete services
-kubectl delete services --all-namespaces -l app=airflow
+kubectl delete services  -n airflow --all
 kubectl delete services --all-namespaces | grep airflow
 
 # Delete pods (if any are stuck)
-kubectl delete pods --all-namespaces -l app=airflow
+kubectl delete pods  -n airflow --all
 kubectl delete pods --all-namespaces | grep airflow
 
 # Delete statefulsets
-kubectl delete statefulsets --all-namespaces -l app=airflow
+kubectl delete statefulsets  -n airflow --all
 kubectl delete statefulsets --all-namespaces | grep airflow
 
 # Delete persistent volume claims
-kubectl delete pvc --all-namespaces -l app=airflow
+kubectl delete pvc  -n airflow --all
 kubectl delete pvc --all-namespaces | grep airflow
 
 # Delete persistent volumes
-kubectl delete pv -l app=airflow
-kubectl get pv | grep airflow | awk '{print $1}' | xargs kubectl delete pv
+kubectl delete pv -n airflow --all
 
 # Delete configmaps
-kubectl delete configmaps --all-namespaces -l app=airflow
-kubectl delete configmaps --all-namespaces | grep airflow
+kubectl delete configmaps -n airflow --all
+kubectl delete configmaps  -n airflow --all
 
 # Delete secrets
-kubectl delete secrets --all-namespaces -l app=airflow
-kubectl delete secrets --all-namespaces | grep airflow
+kubectl delete secrets -n airflow --all
+kubectl delete secrets  -n airflow --all
+
+ kubectl delete job -n airflow airflow-run-airflow-migrations
 
 
-kubectl delete job --all-namespaces | grep airflow
+# force finalize
+for t in $(kubectl api-resources --verbs=list --namespaced -o name); do
+  for r in $(kubectl get -n airflow "$t" -o name 2>/dev/null); do
+    kubectl patch -n airflow "$r" -p '{"metadata":{"finalizers":[]}}' --type=merge || true
+  done
+done
 
+
+helm uninstall airflow -n airflow
 
 
 helm upgrade --install airflow apache-airflow/airflow -n airflow -f infra/values.yaml
