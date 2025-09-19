@@ -96,3 +96,13 @@ kubectl create secret generic airflow-postgresql-secret \
 
 
 helm upgrade --install airflow apache-airflow/airflow -n airflow -f infra/values.yaml
+
+kubectl -n airflow port-forward deployment/airflow-webserver 8080:8080
+
+ kubectl -n airflow port-forward svc/prometheus 9090:9090
+ 
+ kubectl -n airflow port-forward svc/grafana 3000:3000
+ 
+ Forwarding from 127.0.0.1:9102 -> 9102
+ 
+ kubectl get pod -n airflow -w
