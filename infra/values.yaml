@@ -1,250 +1,125 @@
-# Airflow Helm Chart Configuration
-# Official Apache Airflow Helm Chart Values
-# https://artifacthub.io/packages/helm/apache-airflow/airflow
+executor: CeleryExecutor
+airflowVersion: "2.10.5"
 
-# Airflow Docker image
-defaultAirflowRepository: apache/airflow
-defaultAirflowTag: 2.10.3-python3.11
-airflowVersion: 2.10.3
+images:
+  airflow:
+    repository: apache/airflow
+    tag: "2.10.5"
+    pullPolicy: IfNotPresent
 
-# Airflow executor configuration
-executor: KubernetesExecutor
+config:
+  core:
+    executor: CeleryExecutor
+    fernet_key: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
+    dags_are_paused_at_creation: true
+    load_examples: false
+  api:
+    auth_backends: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+  scheduler:
+    enable_health_check: true
+  metrics:
+    statsd_on: true
+    statsd_host: airflow-statsd
+    statsd_port: 9125
+    statsd_prefix: airflow
+    metrics_use_pattern_match: false
+    otel_on: false
 
-# Environment variables for all Airflow containers
-env:
-  - name: AIRFLOW__CORE__LOAD_EXAMPLES
-    value: "false"
-  - name: AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION
-    value: "true"
-  # StatsD Configuration
-  - name: AIRFLOW__METRICS__STATSD_ON
-    value: "true"
-  - name: AIRFLOW__METRICS__STATSD_HOST
-    value: "airflow-statsd-exporter"
-  - name: AIRFLOW__METRICS__STATSD_PORT
-    value: "9125"
-  - name: AIRFLOW__METRICS__STATSD_PREFIX
-    value: "airflow"
-  # OpenTelemetry Configuration
-  - name: AIRFLOW__METRICS__OTEL_ON
-    value: "true"
-  - name: AIRFLOW__METRICS__OTEL_HOST
-    value: "otel-collector"
-  - name: AIRFLOW__METRICS__OTEL_PORT
-    value: "4318"
-  - name: AIRFLOW__METRICS__OTEL_PREFIX
-    value: "airflow"
-  - name: AIRFLOW__METRICS__OTEL_INTERVAL_MILLISECONDS
-    value: "30000"
-  - name: AIRFLOW__METRICS__OTEL_SSL_ACTIVE
-    value: "false"
-  # Tracing Configuration
-  - name: AIRFLOW__TRACES__OTEL_ON
-    value: "false"
-  - name: AIRFLOW__TRACES__OTEL_HOST
-    value: "otel-collector"
-  - name: AIRFLOW__TRACES__OTEL_PORT
-    value: "4318"
-  - name: AIRFLOW__TRACES__OTEL_TASK_LOG_EVENT
-    value: "true"
-  # Scheduler Configuration
-  - name: AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK
-    value: "true"
-  - name: AIRFLOW__METRICS__METRICS_USE_PATTERN_MATCH
-    value: "false"
+webserverSecretKey: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
 
-# PostgreSQL Configuration with working image
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: true
+    repo: https://github.com/samuel-aka-viana/airflow-prometheus.git
+    branch: main
+    subPath: dags
+
+logs:
+  persistence:
+    enabled: false
+
 postgresql:
   enabled: true
-  image:
-    tag: "16.2.0-debian-12-r20"
   auth:
-    enablePostgresUser: true
-    postgresPassword: postgres
+    postgresPassword: airflow
     username: airflow
     password: airflow
     database: airflow
   primary:
     persistence:
       enabled: true
-      storageClass: "standard"
-      size: 5Gi
+      size: 8Gi
 
-# Redis for Celery backend (disabled for KubernetesExecutor)
 redis:
-  enabled: false
+  enabled: true
 
-# Airflow webserver configuration
+workers:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+scheduler:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
 webserver:
   replicas: 1
   resources:
-    requests:
-      memory: "512Mi"
-      cpu: "250m"
     limits:
-      memory: "1Gi"
-      cpu: "500m"
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
   service:
-    type: NodePort
+    type: ClusterIP
     ports:
       - name: airflow-ui
         port: 8080
-        targetPort: airflow-ui
-        nodePort: 30080
-  livenessProbe:
-    initialDelaySeconds: 60
-    periodSeconds: 30
-  readinessProbe:
-    initialDelaySeconds: 30
-    periodSeconds: 10
-  # Default user configuration
   defaultUser:
     enabled: true
     role: Admin
     username: admin
-    email: admin@example.com
-    firstName: Admin
-    lastName: User
     password: admin
-
-# Airflow scheduler configuration
-scheduler:
-  replicas: 1
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "250m"
-    limits:
-      memory: "1Gi"
-      cpu: "500m"
+    email: admin@example.com
+  startupProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 60        # ~10min de janela
   livenessProbe:
-    initialDelaySeconds: 60
-    periodSeconds: 30
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 2
+    failureThreshold: 6
+  readinessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 12
 
-# Airflow triggerer configuration
 triggerer:
   enabled: true
   replicas: 1
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "125m"
-    limits:
-      memory: "512Mi"
-      cpu: "250m"
 
-# GitSync configuration for DAGs
-dags:
-  gitSync:
-    enabled: true
-    repo: https://github.com/samuel-aka-viana/airflow-prometheus.git
-    branch: main
-    rev: HEAD
-    depth: 1
-    maxFailures: 0
-    subPath: "dags"
-    wait: 60
-    containerName: git-sync
-    uid: 65533
-    # Resources for git-sync container
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "50m"
-      limits:
-        memory: "128Mi"
-        cpu: "100m"
-
-# Logs configuration
-logs:
-  persistence:
-    enabled: true
-    size: 10Gi
-    storageClassName: standard
-
-# Ingress configuration
-ingress:
-  web:
-    enabled: true
-    ingressClassName: nginx
-    annotations: {}
-    hosts:
-      - name: airflow.local.test
-        tls:
-          enabled: false
-    path: /
-
-# Security context
-securityContexts:
-  pod:
-    runAsUser: 50000
-    runAsGroup: 50000
-    fsGroup: 50000
-  container: {}
-
-# Service Account
-serviceAccount:
-  create: true
-  name: airflow
-
-# RBAC configuration
-rbac:
-  create: true
-  createSCCRoleBinding: false
-
-# Airflow configuration
-config:
-  core:
-    dags_folder: /opt/airflow/dags
-    load_examples: false
-    executor: KubernetesExecutor
-
-  kubernetes_executor:
-    namespace: airflow
-    delete_worker_pods: true
-    worker_container_repository: apache/airflow
-    worker_container_tag: 2.10.3-python3.11
-
-  webserver:
-    expose_config: true
-
-  scheduler:
-    statsd_on: true
-    statsd_host: airflow-statsd-exporter
-    statsd_port: 9125
-    statsd_prefix: airflow
-
-# Cleanup configuration
-cleanup:
-  enabled: true
-  schedule: "*/15 * * * *"
-
-# Flower configuration (disabled for KubernetesExecutor)
-flower:
-  enabled: false
-
-# StatsD configuration
 statsd:
   enabled: true
 
-# Workers configuration (for KubernetesExecutor, these apply to worker pods)
-workers:
-  # This setting tells kubernetes that its ok to evict when it wants to scale a node down
-  safeToEvict: true
-  # Resources will be applied to KubernetesExecutor worker pods
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "250m"
-    limits:
-      memory: "1Gi"
-      cpu: "500m"
+migrateDatabaseJob:
+  enabled: true
 
-# Allow pod launching for KubernetesExecutor
-allowPodLaunching: true
-
-# Enable built-in secret environment variables
-enableBuiltInSecretEnvVars:
-  AIRFLOW__CORE__FERNET_KEY: true
-  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: true
-  AIRFLOW__WEBSERVER__SECRET_KEY: true
+cleanup:
+  enabled: false

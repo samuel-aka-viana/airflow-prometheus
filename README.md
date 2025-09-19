@@ -45,3 +45,39 @@ Certifique-se de ter o **Docker** e o **Docker Compose** instalados em seu ambie
 ## Monitoramento das DAGs
 
 Assim que as DAGs estiverem em execução, o Prometheus coletará as métricas e o Grafana exibirá essas informações em dashboards interativos. Dois dashboards padrão do Airflow já estão configurados no Grafana, oferecendo uma visão detalhada do status das DAGs, duração das tarefas, erros e uso de recursos.
+
+
+# Delete deployments
+kubectl delete deployments --all-namespaces -l app=airflow
+kubectl delete deployments --all-namespaces | grep airflow
+
+# Delete services
+kubectl delete services --all-namespaces -l app=airflow
+kubectl delete services --all-namespaces | grep airflow
+
+# Delete pods (if any are stuck)
+kubectl delete pods --all-namespaces -l app=airflow
+kubectl delete pods --all-namespaces | grep airflow
+
+# Delete statefulsets
+kubectl delete statefulsets --all-namespaces -l app=airflow
+kubectl delete statefulsets --all-namespaces | grep airflow
+
+# Delete persistent volume claims
+kubectl delete pvc --all-namespaces -l app=airflow
+kubectl delete pvc --all-namespaces | grep airflow
+
+# Delete persistent volumes
+kubectl delete pv -l app=airflow
+kubectl get pv | grep airflow | awk '{print $1}' | xargs kubectl delete pv
+
+# Delete configmaps
+kubectl delete configmaps --all-namespaces -l app=airflow
+kubectl delete configmaps --all-namespaces | grep airflow
+
+# Delete secrets
+kubectl delete secrets --all-namespaces -l app=airflow
+kubectl delete secrets --all-namespaces | grep airflow
+
+
+kubectl delete job --all-namespaces | grep airflow
