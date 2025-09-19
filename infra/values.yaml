@@ -1,4 +1,4 @@
-executor: CeleryExecutor
+executor: KubernetesExecutor
 airflowVersion: "2.10.5"
 
 images:
@@ -9,7 +9,7 @@ images:
 
 config:
   core:
-    executor: CeleryExecutor
+    executor: KubernetesExecutor
     fernet_key: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
     dags_are_paused_at_creation: true
     load_examples: false
@@ -24,6 +24,16 @@ config:
     statsd_prefix: airflow
     metrics_use_pattern_match: false
     otel_on: false
+  kubernetes:
+    # Kubernetes executor configuration
+    namespace: airflow
+    worker_container_repository: apache/airflow
+    worker_container_tag: "2.10.5"
+    worker_pods_creation_batch_size: 1
+    worker_service_account_name: airflow-worker
+    delete_worker_pods: true
+    delete_worker_pods_on_success: false
+    delete_worker_pods_on_failure: false
 
 webserverSecretKey: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
 
@@ -52,18 +62,13 @@ postgresql:
       enabled: true
       size: 8Gi
 
+# Redis is not needed with KubernetesExecutor
 redis:
-  enabled: true
+  enabled: false
 
-workers:
-  replicas: 1
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 2Gi
-    requests:
-      cpu: 500m
-      memory: 1Gi
+# Workers are not needed with KubernetesExecutor - pods are created on demand
+#workers:
+#  enabled: false
 
 scheduler:
   replicas: 1
@@ -99,7 +104,7 @@ webserver:
     initialDelaySeconds: 10
     periodSeconds: 10
     timeoutSeconds: 2
-    failureThreshold: 60        # ~10min de janela
+    failureThreshold: 60
   livenessProbe:
     initialDelaySeconds: 30
     periodSeconds: 20
@@ -123,3 +128,67 @@ migrateDatabaseJob:
 
 cleanup:
   enabled: false
+
+# ServiceAccount and RBAC for KubernetesExecutor worker pods
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+rbac:
+  create: true
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - "pods"
+        - "pods/log"
+      verbs:
+        - "create"
+        - "get"
+        - "delete"
+        - "list"
+        - "watch"
+
+# Pod template for worker pods (optional customization)
+#workers:
+#  podTemplate: |
+#    apiVersion: v1
+#    kind: Pod
+#    metadata:
+#      name: placeholder-name
+#      labels:
+#        tier: airflow
+#        component: worker
+#        release: airflow
+#    spec:
+#      restartPolicy: Never
+#      serviceAccountName: airflow-worker
+#      containers:
+#        - name: base
+#          image: apache/airflow:2.10.5
+#          imagePullPolicy: IfNotPresent
+#          args: []
+#          ports:
+#            - name: worker-logs
+#              containerPort: 8793
+#          resources:
+#            limits:
+#              cpu: 1000m
+#              memory: 2Gi
+#            requests:
+#              cpu: 500m
+#              memory: 1Gi
+#          volumeMounts:
+#            - name: config
+#              mountPath: /opt/airflow/airflow.cfg
+#              subPath: airflow.cfg
+#              readOnly: true
+#            - name: config
+#              mountPath: /opt/airflow/config/airflow_local_settings.py
+#              subPath: airflow_local_settings.py
+#              readOnly: true
+#      volumes:
+#        - name: config
+#          configMap:
+#            name: airflow-config

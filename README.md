@@ -81,3 +81,7 @@ kubectl delete secrets --all-namespaces | grep airflow
 
 
 kubectl delete job --all-namespaces | grep airflow
+
+
+
+helm upgrade --install airflow apache-airflow/airflow -n airflow -f infra/values.yaml
