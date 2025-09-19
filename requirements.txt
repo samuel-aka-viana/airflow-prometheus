@@ -1,2 +1,2 @@
-apache-airflow[otel]==2.10.3
-apache-airflow[statsd]==2.10.3
+apache-airflow[otel]==2.10.5
+apache-airflow[statsd]==2.10.5

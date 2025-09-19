@@ -127,7 +127,7 @@ migrateDatabaseJob:
   enabled: true
 
 cleanup:
-  enabled: false
+  enabled: true
 
 # ServiceAccount and RBAC for KubernetesExecutor worker pods
 serviceAccount:
