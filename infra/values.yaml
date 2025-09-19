@@ -29,7 +29,7 @@ config:
     statsd_prefix: airflow
     metrics_use_pattern_match: false
     otel_on: false
-    statsd_allow_list: 'scheduler,executor,dagrun,pool,triggerer'
+    statsd_allow_list: 'scheduler,executor,dagrun,pool,triggerer,ti,operator,dag,celery,task,sla'
   kubernetes:
     # Kubernetes executor configuration
     namespace: airflow
