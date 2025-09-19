@@ -14,10 +14,8 @@ config:
     fernet_key: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
     dags_are_paused_at_creation: true
     load_examples: false
-    # Explicitly specify the database connection to use airflow user
     sql_alchemy_conn: "postgresql+psycopg2://airflow:airflow@airflow-postgresql:5432/airflow"
   database:
-    # Override any default database connection settings
     sql_alchemy_conn: "postgresql+psycopg2://airflow:airflow@airflow-postgresql:5432/airflow"
   api:
     auth_backends: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"

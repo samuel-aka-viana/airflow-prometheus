@@ -5,10 +5,6 @@ from airflow.operators.python import PythonOperator
 
 # Função Python simples para a DAG
 def print_hello():
-    """
-    This function prints a greeting message "Hello from Airflow!", 
-    pauses execution for 60 seconds, and then prints "Finish task".
-    """
     from time import sleep
     print("Hello from Airflow!")
     sleep(60)
