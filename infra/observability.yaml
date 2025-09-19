@@ -7,114 +7,116 @@ metadata:
 data:
   statsd_mapping.yml: |
     mappings:
+      # Airflow StatsD metrics mappings (https://airflow.apache.org/docs/apache-airflow/stable/logging-monitoring/metrics.html)
+
       # === Counters ===
       - match: "(.+)\\.(.+)_start$"
-        match_type: regex
         match_metric_type: counter
-        name: af_agg_job_start
+        name: "af_agg_job_start"
+        match_type: regex
         labels:
           airflow_id: "$1"
           job_name: "$2"
 
       - match: "(.+)\\.(.+)_end$"
-        match_type: regex
         match_metric_type: counter
-        name: af_agg_job_end
+        name: "af_agg_job_end"
+        match_type: regex
         labels:
           airflow_id: "$1"
           job_name: "$2"
 
       - match: "(.+)\\.operator_failures_(.+)$"
-        match_type: regex
         match_metric_type: counter
-        name: af_agg_operator_failures
+        name: "af_agg_operator_failures"
+        match_type: regex
         labels:
           airflow_id: "$1"
           operator_name: "$2"
 
       - match: "(.+)\\.operator_successes_(.+)$"
-        match_type: regex
         match_metric_type: counter
-        name: af_agg_operator_successes
+        name: "af_agg_operator_successes"
+        match_type: regex
         labels:
           airflow_id: "$1"
           operator_name: "$2"
 
       - match: "*.ti_failures"
         match_metric_type: counter
-        name: af_agg_ti_failures
+        name: "af_agg_ti_failures"
         labels:
           airflow_id: "$1"
 
       - match: "*.ti_successes"
         match_metric_type: counter
-        name: af_agg_ti_successes
+        name: "af_agg_ti_successes"
         labels:
           airflow_id: "$1"
 
       - match: "*.zombies_killed"
         match_metric_type: counter
-        name: af_agg_zombies_killed
+        name: "af_agg_zombies_killed"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler_heartbeat"
         match_metric_type: counter
-        name: af_agg_scheduler_heartbeat
+        name: "af_agg_scheduler_heartbeat"
         labels:
           airflow_id: "$1"
 
       - match: "*.dag_processing.processes"
         match_metric_type: counter
-        name: af_agg_dag_processing_processes
+        name: "af_agg_dag_processing_processes"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler.tasks.killed_externally"
         match_metric_type: counter
-        name: af_agg_scheduler_tasks_killed_externally
+        name: "af_agg_scheduler_tasks_killed_externally"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler.tasks.running"
         match_metric_type: counter
-        name: af_agg_scheduler_tasks_running
+        name: "af_agg_scheduler_tasks_running"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler.tasks.starving"
         match_metric_type: counter
-        name: af_agg_scheduler_tasks_starving
+        name: "af_agg_scheduler_tasks_starving"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler.orphaned_tasks.cleared"
         match_metric_type: counter
-        name: af_agg_scheduler_orphaned_tasks_cleared
+        name: "af_agg_scheduler_orphaned_tasks_cleared"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler.orphaned_tasks.adopted"
         match_metric_type: counter
-        name: af_agg_scheduler_orphaned_tasks_adopted
+        name: "af_agg_scheduler_orphaned_tasks_adopted"
         labels:
           airflow_id: "$1"
 
       - match: "*.scheduler.critical_section_busy"
         match_metric_type: counter
-        name: af_agg_scheduler_critical_section_busy
+        name: "af_agg_scheduler_critical_section_busy"
         labels:
           airflow_id: "$1"
 
       - match: "*.sla_email_notification_failure"
         match_metric_type: counter
-        name: af_agg_sla_email_notification_failure
+        name: "af_agg_sla_email_notification_failure"
         labels:
           airflow_id: "$1"
 
       - match: "*.ti.start.*.*"
         match_metric_type: counter
-        name: af_agg_ti_start
+        name: "af_agg_ti_start"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
@@ -122,7 +124,7 @@ data:
 
       - match: "*.ti.finish.*.*.*"
         match_metric_type: counter
-        name: af_agg_ti_finish
+        name: "af_agg_ti_finish"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
@@ -131,114 +133,142 @@ data:
 
       - match: "*.dag.callback_exceptions"
         match_metric_type: counter
-        name: af_agg_dag_callback_exceptions
+        name: "af_agg_dag_callback_exceptions"
         labels:
           airflow_id: "$1"
 
       - match: "*.celery.task_timeout_error"
         match_metric_type: counter
-        name: af_agg_celery_task_timeout_error
+        name: "af_agg_celery_task_timeout_error"
         labels:
           airflow_id: "$1"
 
       # === Gauges ===
       - match: "*.dagbag_size"
         match_metric_type: gauge
-        name: af_agg_dagbag_size
+        name: "af_agg_dagbag_size"
         labels:
           airflow_id: "$1"
 
       - match: "*.dag_processing.import_errors"
         match_metric_type: gauge
-        name: af_agg_dag_processing_import_errors
+        name: "af_agg_dag_processing_import_errors"
         labels:
           airflow_id: "$1"
 
       - match: "*.dag_processing.total_parse_time"
         match_metric_type: gauge
-        name: af_agg_dag_processing_total_parse_time
+        name: "af_agg_dag_processing_total_parse_time"
         labels:
           airflow_id: "$1"
 
       - match: "*.dag_processing.last_runtime.*"
         match_metric_type: gauge
-        name: af_agg_dag_processing_last_runtime
+        name: "af_agg_dag_processing_last_runtime"
         labels:
           airflow_id: "$1"
           dag_file: "$2"
 
       - match: "*.dag_processing.last_run.seconds_ago.*"
         match_metric_type: gauge
-        name: af_agg_dag_processing_last_run_seconds
+        name: "af_agg_dag_processing_last_run_seconds"
         labels:
           airflow_id: "$1"
           dag_file: "$2"
 
       - match: "*.dag_processing.processor_timeouts"
         match_metric_type: gauge
-        name: af_agg_dag_processing_processor_timeouts
+        name: "af_agg_dag_processing_processor_timeouts"
         labels:
           airflow_id: "$1"
 
       - match: "*.executor.open_slots"
         match_metric_type: gauge
-        name: af_agg_executor_open_slots
+        name: "af_agg_executor_open_slots"
         labels:
           airflow_id: "$1"
 
       - match: "*.executor.queued_tasks"
         match_metric_type: gauge
-        name: af_agg_executor_queued_tasks
+        name: "af_agg_executor_queued_tasks"
         labels:
           airflow_id: "$1"
 
       - match: "*.executor.running_tasks"
         match_metric_type: gauge
-        name: af_agg_executor_running_tasks
+        name: "af_agg_executor_running_tasks"
         labels:
           airflow_id: "$1"
 
       - match: "*.pool.open_slots.*"
         match_metric_type: gauge
-        name: af_agg_pool_open_slots
+        name: "af_agg_pool_open_slots"
         labels:
           airflow_id: "$1"
           pool_name: "$2"
 
       - match: "*.pool.queued_slots.*"
         match_metric_type: gauge
-        name: af_agg_pool_queued_slots
+        name: "af_agg_pool_queued_slots"
         labels:
           airflow_id: "$1"
           pool_name: "$2"
 
       - match: "*.pool.running_slots.*"
         match_metric_type: gauge
-        name: af_agg_pool_running_slots
+        name: "af_agg_pool_running_slots"
         labels:
           airflow_id: "$1"
           pool_name: "$2"
 
       - match: "*.pool.starving_tasks.*"
         match_metric_type: gauge
-        name: af_agg_pool_starving_tasks
+        name: "af_agg_pool_starving_tasks"
         labels:
           airflow_id: "$1"
           pool_name: "$2"
 
-      # === Timers (observer) ===
+      - match: "*.smart_sensor_operator.poked_tasks"
+        match_metric_type: gauge
+        name: "af_agg_smart_sensor_operator_poked_tasks"
+        labels:
+          airflow_id: "$1"
+
+      - match: "*.smart_sensor_operator.poked_success"
+        match_metric_type: gauge
+        name: "af_agg_smart_sensor_operator_poked_success"
+        labels:
+          airflow_id: "$1"
+
+      - match: "*.smart_sensor_operator.poked_exception"
+        match_metric_type: gauge
+        name: "af_agg_smart_sensor_operator_poked_exception"
+        labels:
+          airflow_id: "$1"
+
+      - match: "*.smart_sensor_operator.exception_failures"
+        match_metric_type: gauge
+        name: "af_agg_smart_sensor_operator_exception_failures"
+        labels:
+          airflow_id: "$1"
+
+      - match: "*.smart_sensor_operator.infra_failures"
+        match_metric_type: gauge
+        name: "af_agg_smart_sensor_operator_infra_failures"
+        labels:
+          airflow_id: "$1"
+
+      # === Timers ===
       - match: "*.dagrun.dependency-check.*"
         match_metric_type: observer
-        timer_type: summary
-        name: af_agg_dagrun_dependency_check
+        name: "af_agg_dagrun_dependency_check"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
-        # observer_type: histogram  # opcional
 
       - match: "*.dag.*.*.duration"
         match_metric_type: observer
-        name: af_agg_dag_task_duration
+        name: "af_agg_dag_task_duration"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
@@ -246,49 +276,45 @@ data:
 
       - match: "*.dag_processing.last_duration.*"
         match_metric_type: observer
-        timer_type: summary
-        name: af_agg_dag_processing_duration
+        name: "af_agg_dag_processing_duration"
         labels:
           airflow_id: "$1"
           dag_file: "$2"
 
       - match: "*.dagrun.duration.success.*"
         match_metric_type: observer
-        name: af_agg_dagrun_duration_success
-        timer_type: summary
+        name: "af_agg_dagrun_duration_success"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
 
       - match: "*.dagrun.duration.failed.*"
         match_metric_type: observer
-        name: af_agg_dagrun_duration_failed
-        timer_type: summary
+        name: "af_agg_dagrun_duration_failed"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
 
       - match: "*.dagrun.schedule_delay.*"
         match_metric_type: observer
-        name: af_agg_dagrun_schedule_delay
+        name: "af_agg_dagrun_schedule_delay"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
 
       - match: "*.scheduler.critical_section_duration"
         match_metric_type: observer
-        timer_type: summary
-        name: af_agg_scheduler_critical_section_duration
+        name: "af_agg_scheduler_critical_section_duration"
         labels:
           airflow_id: "$1"
 
       - match: "*.dagrun.*.first_task_scheduling_delay"
         match_metric_type: observer
-        timer_type: summary
-        name: af_agg_dagrun_first_task_scheduling_delay
+        name: "af_agg_dagrun_first_task_scheduling_delay"
         labels:
           airflow_id: "$1"
           dag_id: "$2"
+
 ---
 # StatsD Exporter Deployment
 apiVersion: apps/v1
@@ -514,12 +540,620 @@ data:
           foldersFromFilesStructure: true
 ---
 # Grafana Dashboards (vazio para satisfazer o mount)
+---
+# Grafana Dashboards ConfigMap
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-dashboards
   namespace: airflow
-data: {}
+data:
+  airflow-cluster-dashboard.json: |
+    {
+        "annotations": {
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": "-- Grafana --",
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "id": 2,
+        "iteration": 1612802652229,
+        "links": [],
+        "panels": [
+            {
+                "collapsed": false,
+                "datasource": null,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 43,
+                "panels": [],
+                "title": "Scheduler",
+                "type": "row"
+            },
+            {
+                "cacheTimeout": null,
+                "datasource": null,
+                "description": "",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {},
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 8,
+                    "x": 0,
+                    "y": 1
+                },
+                "id": 17,
+                "interval": null,
+                "links": [],
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "auto"
+                },
+                "pluginVersion": "7.3.5",
+                "targets": [
+                    {
+                        "expr": "af_agg_scheduler_heartbeat{airflow_id=\"$airflow_id\"}",
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Scheduler heartbeat",
+                "type": "stat"
+            },
+            {
+                "datasource": null,
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {},
+                        "links": [],
+                        "mappings": [],
+                        "noValue": "0",
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 3,
+                    "x": 8,
+                    "y": 1
+                },
+                "id": 4,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "auto"
+                },
+                "pluginVersion": "7.3.5",
+                "targets": [
+                    {
+                        "expr": "af_agg_dagbag_size{airflow_id=\"$airflow_id\"}",
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Dagbag size",
+                "type": "stat"
+            },
+            {
+                "datasource": null,
+                "description": "Seconds taken to scan and import all DAG files once",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {},
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        },
+                        "unit": "s"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 4,
+                    "x": 11,
+                    "y": 1
+                },
+                "id": 14,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "auto"
+                },
+                "pluginVersion": "7.3.5",
+                "targets": [
+                    {
+                        "expr": "af_agg_dag_processing_total_parse_time{airflow_id=\"$airflow_id\"}",
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "DAG processing total parse time",
+                "type": "stat"
+            },
+            {
+                "datasource": null,
+                "description": "Number of errors from trying to parse DAG files",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {},
+                        "links": [],
+                        "mappings": [],
+                        "noValue": "0",
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 4,
+                    "x": 15,
+                    "y": 1
+                },
+                "id": 6,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "mean"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "auto"
+                },
+                "pluginVersion": "7.3.5",
+                "targets": [
+                    {
+                        "expr": "af_agg_dag_processing_import_errors{airflow_id=\"$airflow_id\"}",
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Dagbag import errors",
+                "type": "stat"
+            },
+            {
+                "datasource": null,
+                "description": "Zombie tasks killed",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {},
+                        "mappings": [],
+                        "noValue": "0",
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 4,
+                    "w": 5,
+                    "x": 19,
+                    "y": 1
+                },
+                "id": 29,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "auto"
+                },
+                "pluginVersion": "7.3.5",
+                "targets": [
+                    {
+                        "expr": "af_agg_zombies_killed{airflow_id=\"$airflow_id\"}",
+                        "interval": "",
+                        "legendFormat": "",
+                        "refId": "A"
+                    }
+                ],
+                "timeFrom": null,
+                "timeShift": null,
+                "title": "Zombies killed",
+                "type": "stat"
+            }
+        ],
+        "refresh": "5s",
+        "schemaVersion": 26,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+            "list": [
+                {
+                    "allValue": null,
+                    "current": {
+                        "selected": false,
+                        "text": "airflow",
+                        "value": "airflow"
+                    },
+                    "datasource": "Prometheus",
+                    "definition": "label_values(airflow_id)",
+                    "error": null,
+                    "hide": 0,
+                    "includeAll": false,
+                    "label": "Airflow Instance Id",
+                    "multi": false,
+                    "name": "airflow_id",
+                    "options": [
+                        {
+                            "selected": true,
+                            "text": "airflow",
+                            "value": "airflow"
+                        }
+                    ],
+                    "query": "label_values(airflow_id)",
+                    "refresh": 0,
+                    "regex": "",
+                    "skipUrlSync": false,
+                    "sort": 0,
+                    "tagValuesQuery": "",
+                    "tags": [],
+                    "tagsQuery": "",
+                    "type": "query",
+                    "useTags": false
+                }
+            ]
+        },
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "timepicker": {
+            "refresh_intervals": [
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ]
+        },
+        "timezone": "",
+        "title": "Airflow cluster dashboard",
+        "uid": "lFXqBGxWk",
+        "version": 8
+    }
+
+  airflow-dag-dashboard.json: |
+    {
+        "annotations": {
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": "-- Grafana --",
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "id": 23,
+        "iteration": 1612802909274,
+        "links": [],
+        "panels": [
+            {
+                "collapsed": true,
+                "datasource": null,
+                "gridPos": {
+                    "h": 1,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 47,
+                "panels": [],
+                "title": "DAG stats",
+                "type": "row"
+            },
+            {
+                "aliasColors": {},
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "datasource": null,
+                "description": "Seconds taken for a DagRun to reach success state",
+                "fieldConfig": {
+                    "defaults": {
+                        "custom": {
+                            "align": null,
+                            "filterable": false
+                        },
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        },
+                        "unit": "ms"
+                    },
+                    "overrides": []
+                },
+                "fill": 1,
+                "fillGradient": 0,
+                "gridPos": {
+                    "h": 8,
+                    "w": 24,
+                    "x": 0,
+                    "y": 1
+                },
+                "hiddenSeries": false,
+                "id": 25,
+                "legend": {
+                    "avg": false,
+                    "current": false,
+                    "max": false,
+                    "min": false,
+                    "show": true,
+                    "total": false,
+                    "values": false
+                },
+                "lines": true,
+                "linewidth": 1,
+                "nullPointMode": "null",
+                "options": {
+                    "alertThreshold": true
+                },
+                "percentage": false,
+                "pluginVersion": "7.3.5",
+                "pointradius": 2,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [
+                    {
+                        "expr": "af_agg_dagrun_duration_success{dag_id=\"$dag_id\"} * 1000",
+                        "format": "time_series",
+                        "interval": "",
+                        "legendFormat": "{{dag_id}} p{{quantile}}",
+                        "refId": "A"
+                    }
+                ],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "Success DAG run duration",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xAxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
+                    "show": true,
+                    "values": []
+                },
+                "yAxes": [
+                    {
+                        "format": "ms",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yAxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
+            }
+        ],
+        "refresh": "5s",
+        "schemaVersion": 26,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+            "list": [
+                {
+                    "allValue": null,
+                    "current": {
+                        "selected": true,
+                        "text": "java_dag",
+                        "value": "java_dag"
+                    },
+                    "datasource": "Prometheus",
+                    "definition": "label_values(dag_id)",
+                    "error": null,
+                    "hide": 0,
+                    "includeAll": false,
+                    "label": "DAG ID",
+                    "multi": false,
+                    "name": "dag_id",
+                    "options": [
+                        {
+                            "selected": false,
+                            "text": "dbnd_spark_dag",
+                            "value": "dbnd_spark_dag"
+                        },
+                        {
+                            "selected": false,
+                            "text": "huge_dag",
+                            "value": "huge_dag"
+                        },
+                        {
+                            "selected": true,
+                            "text": "java_dag",
+                            "value": "java_dag"
+                        }
+                    ],
+                    "query": "label_values(dag_id)",
+                    "refresh": 0,
+                    "regex": "",
+                    "skipUrlSync": false,
+                    "sort": 0,
+                    "tagValuesQuery": "",
+                    "tags": [],
+                    "tagsQuery": "",
+                    "type": "query",
+                    "useTags": false
+                }
+            ]
+        },
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "timepicker": {
+            "refresh_intervals": [
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ]
+        },
+        "timezone": "",
+        "title": "Airflow DAG dashboard",
+        "uid": "qBWJRGPMz",
+        "version": 4
+    }
 ---
 # Grafana PVC
 apiVersion: v1
