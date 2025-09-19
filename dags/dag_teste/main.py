@@ -27,7 +27,7 @@ with DAG(
     dag_id='dag_teste',
     default_args=default_args,
     description='DAG de teste',
-    schedule_interval=timedelta(minutes=1),
+    schedule_interval=timedelta(days=1),
     start_date=datetime(2024, 1, 1),
     catchup=False,
 ) as dag:

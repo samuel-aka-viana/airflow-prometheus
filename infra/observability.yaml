@@ -25,7 +25,6 @@ data:
         labels:
           airflow_id: "$1"
           job_name: "$2"
-      # === Adicionar estes mapeamentos ao ConfigMap statsd-exporter-config ===
       
       # Task failures/successes com detalhamento por DAG e Task
       - match: "*.task_failures.*.*"
@@ -181,8 +180,8 @@ data:
         labels:
           airflow_id: "$1"
 
-      # Task instances created for operator
-      - match: "*.operator.task_instances_created_(.+)"
+      # Task instances created for operator - CORRIGIDO
+      - match: "(.+)\\.operator\\.task_instances_created_(.+)$"
         match_metric_type: counter
         name: "af_agg_operator_task_instances_created"
         match_type: regex
@@ -190,15 +189,8 @@ data:
           airflow_id: "$1"
           operator_name: "$2"
 
-      # Task instances created for operator with DAG context
-      - match: "*.operator.task_instances_created_(.+).*"
-        match_metric_type: counter
-        name: "af_agg_operator_task_instances_created_detailed"
-        match_type: regex
-        labels:
-          airflow_id: "$1"
-          operator_name: "$2"
-          dag_id: "$3"
+      # Task instances created for operator with DAG context - REMOVIDO padrão problemático
+      # Este padrão será capturado pelo padrão acima ou por padrões mais específicos
 
       # Task removed from DAG with run type
       - match: "*.task_removed_from_dag.*.*"
@@ -579,7 +571,6 @@ data:
         labels:
           airflow_id: "$1"
           dag_id: "$2"
-
 ---
 # StatsD Exporter Deployment
 apiVersion: apps/v1
@@ -817,2016 +808,2938 @@ data:
   # Dashboard existente - Cluster overview
   airflow-cluster-dashboard.json: |
     {
-        "annotations": {
-            "list": [
-                {
-                    "builtIn": 1,
-                    "datasource": "-- Grafana --",
-                    "enable": true,
-                    "hide": true,
-                    "iconColor": "rgba(0, 211, 255, 1)",
-                    "name": "Annotations & Alerts",
-                    "type": "dashboard"
-                }
-            ]
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 2,
+      "iteration": 1612802652229,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 43,
+          "panels": [],
+          "title": "Scheduler & Overview",
+          "type": "row"
         },
-        "editable": true,
-        "gnetId": null,
-        "graphTooltip": 0,
-        "id": 2,
-        "iteration": 1612802652229,
-        "links": [],
-        "panels": [
-            {
-                "collapsed": false,
-                "datasource": null,
-                "gridPos": {
-                    "h": 1,
-                    "w": 24,
-                    "x": 0,
-                    "y": 0
-                },
-                "id": 43,
-                "panels": [],
-                "title": "Scheduler & Overview",
-                "type": "row"
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
             },
-            {
-                "datasource": null,
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {},
-                        "mappings": [],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 4,
-                    "w": 4,
-                    "x": 0,
-                    "y": 1
-                },
-                "id": 17,
-                "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "mean"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "af_agg_scheduler_heartbeat{airflow_id=\"$airflow_id\"}",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Scheduler heartbeat",
-                "type": "stat"
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
+          "id": 17,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ],
+              "fields": "",
+              "values": false
             },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
             {
-                "datasource": null,
-                "description": "Total failed tasks",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 1
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 5
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 4,
-                    "w": 4,
-                    "x": 4,
-                    "y": 1
-                },
-                "id": 44,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "af_agg_ti_failures{airflow_id=\"$airflow_id\"}",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Task Failures",
-                "type": "stat"
-            },
-            {
-                "datasource": null,
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 4,
-                    "w": 4,
-                    "x": 8,
-                    "y": 1
-                },
-                "id": 4,
-                "options": {
-                    "colorMode": "value",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "mean"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "af_agg_dagbag_size{airflow_id=\"$airflow_id\"}",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Dagbag size",
-                "type": "stat"
-            },
-            {
-                "datasource": null,
-                "description": "Number of errors from trying to parse DAG files",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 1
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 4,
-                    "w": 4,
-                    "x": 12,
-                    "y": 1
-                },
-                "id": 6,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "auto",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "mean"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "af_agg_dag_processing_import_errors{airflow_id=\"$airflow_id\"}",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "DAG Import Errors",
-                "type": "stat"
+              "expr": "af_agg_scheduler_heartbeat{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
             }
-        ],
-        "refresh": "5s",
-        "schemaVersion": 26,
-        "style": "dark",
-        "tags": [],
-        "templating": {
-            "list": [
-                {
-                    "allValue": null,
-                    "current": {
-                        "selected": false,
-                        "text": "airflow",
-                        "value": "airflow"
-                    },
-                    "datasource": "Prometheus",
-                    "definition": "label_values(airflow_id)",
-                    "error": null,
-                    "hide": 0,
-                    "includeAll": false,
-                    "label": "Airflow Instance Id",
-                    "multi": false,
-                    "name": "airflow_id",
-                    "options": [],
-                    "query": "label_values(airflow_id)",
-                    "refresh": 0,
-                    "regex": "",
-                    "skipUrlSync": false,
-                    "sort": 0,
-                    "type": "query",
-                    "useTags": false
-                }
-            ]
+          ],
+          "title": "Scheduler heartbeat",
+          "type": "stat"
         },
-        "time": {
-            "from": "now-1h",
-            "to": "now"
+        {
+          "datasource": null,
+          "description": "Total failed tasks",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 1
+          },
+          "id": 44,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_ti_failures{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Task Failures",
+          "type": "stat"
         },
-        "timepicker": {
-            "refresh_intervals": [
-                "5s",
-                "10s",
-                "30s",
-                "1m",
-                "5m",
-                "15m",
-                "30m",
-                "1h",
-                "2h",
-                "1d"
-            ]
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 1
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dagbag_size{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Dagbag size",
+          "type": "stat"
         },
-        "timezone": "",
-        "title": "Airflow Cluster Dashboard",
-        "uid": "airflow-cluster",
-        "version": 1
+        {
+          "datasource": null,
+          "description": "Number of errors from trying to parse DAG files",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 1
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_import_errors{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "DAG Import Errors",
+          "type": "stat"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "airflow",
+              "value": "airflow"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(airflow_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Airflow Instance Id",
+            "multi": false,
+            "name": "airflow_id",
+            "options": [],
+            "query": "label_values(airflow_id)",
+            "refresh": 0,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ]
+      },
+      "timezone": "",
+      "title": "Airflow Cluster Dashboard",
+      "uid": "airflow-cluster",
+      "version": 1
     }
 
   # NOVO Dashboard - Task Failures Overview
   airflow-task-failures.json: |
     {
-        "annotations": {
-            "list": []
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 5,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [],
+          "title": "Task Failure Counts",
+          "type": "row"
         },
-        "editable": true,
-        "gnetId": null,
-        "graphTooltip": 0,
-        "id": 5,
-        "links": [],
-        "panels": [
-            {
-                "collapsed": false,
-                "datasource": null,
-                "gridPos": {
-                    "h": 1,
-                    "w": 24,
-                    "x": 0,
-                    "y": 0
-                },
-                "id": 100,
-                "panels": [],
-                "title": "Task Failure Counts",
-                "type": "row"
+        {
+          "datasource": null,
+          "description": "Total count of failed tasks across all DAGs",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 5
+                  },
+                  {
+                    "color": "red",
+                    "value": 15
+                  }
+                ]
+              }
             },
-            {
-                "datasource": null,
-                "description": "Total count of failed tasks across all DAGs",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 5
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 15
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 6,
-                    "w": 6,
-                    "x": 0,
-                    "y": 1
-                },
-                "id": 101,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 20,
-                        "valueSize": 72
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "sum(af_agg_ti_failures{airflow_id=\"$airflow_id\"})",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Total Failed Tasks",
-                "type": "stat"
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 0,
+            "y": 1
+          },
+          "id": 101,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
             },
-            {
-                "datasource": null,
-                "description": "Failed tasks in the last 24 hours",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 3
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 10
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 6,
-                    "w": 6,
-                    "x": 6,
-                    "y": 1
-                },
-                "id": 102,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 20,
-                        "valueSize": 72
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "sum(increase(af_agg_ti_failures{airflow_id=\"$airflow_id\"}[24h]))",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Failed Tasks (24h)",
-                "type": "stat"
+            "text": {
+              "titleSize": 20,
+              "valueSize": 72
             },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
             {
-                "datasource": null,
-                "description": "Failed tasks in the last hour",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 1
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 5
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 6,
-                    "w": 6,
-                    "x": 12,
-                    "y": 1
-                },
-                "id": 103,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 20,
-                        "valueSize": 72
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "sum(increase(af_agg_ti_failures{airflow_id=\"$airflow_id\"}[1h]))",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Failed Tasks (1h)",
-                "type": "stat"
-            },
-            {
-                "datasource": null,
-                "description": "Overall task success rate percentage",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "max": 100,
-                        "min": 0,
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "red",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 85
-                                },
-                                {
-                                    "color": "green",
-                                    "value": 95
-                                }
-                            ]
-                        },
-                        "unit": "percent"
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 6,
-                    "w": 6,
-                    "x": 18,
-                    "y": 1
-                },
-                "id": 104,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 20,
-                        "valueSize": 60
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "(sum(af_agg_ti_successes{airflow_id=\"$airflow_id\"}) / (sum(af_agg_ti_successes{airflow_id=\"$airflow_id\"}) + sum(af_agg_ti_failures{airflow_id=\"$airflow_id\"}))) * 100",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Overall Success Rate",
-                "type": "stat"
-            },
-            {
-                "collapsed": false,
-                "datasource": null,
-                "gridPos": {
-                    "h": 1,
-                    "w": 24,
-                    "x": 0,
-                    "y": 7
-                },
-                "id": 200,
-                "panels": [],
-                "title": "Top Failed Tasks",
-                "type": "row"
-            },
-            {
-                "datasource": null,
-                "description": "Most problematic tasks across all DAGs",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {
-                            "align": null,
-                            "displayMode": "auto",
-                            "filterable": true
-                        },
-                        "mappings": [],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 1
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": [
-                        {
-                            "matcher": {
-                                "id": "byName",
-                                "options": "Failures"
-                            },
-                            "properties": [
-                                {
-                                    "id": "custom.displayMode",
-                                    "value": "color-background"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "gridPos": {
-                    "h": 8,
-                    "w": 24,
-                    "x": 0,
-                    "y": 8
-                },
-                "id": 301,
-                "options": {
-                    "showHeader": true,
-                    "sortBy": [
-                        {
-                            "desc": true,
-                            "displayName": "Failures"
-                        }
-                    ]
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "topk(20, af_agg_ti_finish{state=\"failed\", airflow_id=\"$airflow_id\"})",
-                        "format": "table",
-                        "instant": true,
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Top 20 Most Failed Tasks",
-                "transformations": [
-                    {
-                        "id": "organize",
-                        "options": {
-                            "excludeByName": {
-                                "Time": true,
-                                "__name__": true,
-                                "airflow_id": true,
-                                "instance": true,
-                                "job": true,
-                                "state": true
-                            },
-                            "indexByName": {},
-                            "renameByName": {
-                                "Value": "Failures",
-                                "dag_id": "DAG ID",
-                                "task_id": "Task ID"
-                            }
-                        }
-                    }
-                ],
-                "type": "table"
+              "expr": "sum(af_agg_ti_failures{airflow_id=\"$airflow_id\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
             }
-        ],
-        "refresh": "5s",
-        "schemaVersion": 26,
-        "style": "dark",
-        "tags": ["airflow", "tasks", "failures"],
-        "templating": {
-            "list": [
-                {
-                    "allValue": null,
-                    "current": {
-                        "selected": false,
-                        "text": "airflow",
-                        "value": "airflow"
-                    },
-                    "datasource": "Prometheus",
-                    "definition": "label_values(airflow_id)",
-                    "error": null,
-                    "hide": 0,
-                    "includeAll": false,
-                    "label": "Airflow Instance Id",
-                    "multi": false,
-                    "name": "airflow_id",
-                    "options": [],
-                    "query": "label_values(airflow_id)",
-                    "refresh": 1,
-                    "regex": "",
-                    "skipUrlSync": false,
-                    "sort": 0,
-                    "type": "query",
-                    "useTags": false
+          ],
+          "title": "Total Failed Tasks",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "description": "Failed tasks in the last 24 hours",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 3
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 6,
+            "y": 1
+          },
+          "id": 102,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 20,
+              "valueSize": 72
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "sum(increase(af_agg_ti_failures{airflow_id=\"$airflow_id\"}[24h]))",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Failed Tasks (24h)",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "description": "Failed tasks in the last hour",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 12,
+            "y": 1
+          },
+          "id": 103,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 20,
+              "valueSize": 72
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "sum(increase(af_agg_ti_failures{airflow_id=\"$airflow_id\"}[1h]))",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Failed Tasks (1h)",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "description": "Overall task success rate percentage",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 85
+                  },
+                  {
+                    "color": "green",
+                    "value": 95
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "id": 104,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 20,
+              "valueSize": 60
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "(sum(af_agg_ti_successes{airflow_id=\"$airflow_id\"}) / (sum(af_agg_ti_successes{airflow_id=\"$airflow_id\"}) + sum(af_agg_ti_failures{airflow_id=\"$airflow_id\"}))) * 100",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Overall Success Rate",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 7
+          },
+          "id": 200,
+          "panels": [],
+          "title": "Top Failed Tasks",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "description": "Most problematic tasks across all DAGs",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": null,
+                "displayMode": "auto",
+                "filterable": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Failures"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          },
+          "id": 301,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Failures"
+              }
+            ]
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "topk(20, af_agg_ti_finish{state=\"failed\", airflow_id=\"$airflow_id\"})",
+              "format": "table",
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Top 20 Most Failed Tasks",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "airflow_id": true,
+                  "instance": true,
+                  "job": true,
+                  "state": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Failures",
+                  "dag_id": "DAG ID",
+                  "task_id": "Task ID"
                 }
-            ]
-        },
-        "time": {
-            "from": "now-24h",
-            "to": "now"
-        },
-        "timepicker": {
-            "refresh_intervals": [
-                "5s",
-                "10s",
-                "30s",
-                "1m",
-                "5m",
-                "15m",
-                "30m",
-                "1h",
-                "2h",
-                "1d"
-            ]
-        },
-        "timezone": "",
-        "title": "Airflow Task Failures Overview",
-        "uid": "airflow-task-failures",
-        "version": 1
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [
+        "airflow",
+        "tasks",
+        "failures"],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "airflow",
+              "value": "airflow"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(airflow_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Airflow Instance Id",
+            "multi": false,
+            "name": "airflow_id",
+            "options": [],
+            "query": "label_values(airflow_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ]
+      },
+      "timezone": "",
+      "title": "Airflow Task Failures Overview",
+      "uid": "airflow-task-failures",
+      "version": 1
     }
 
   # NOVO Dashboard - DAG Errors por DAG específico
   airflow-dag-errors.json: |
     {
-        "annotations": {
-            "list": []
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 4,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [],
+          "title": "DAG Error Overview",
+          "type": "row"
         },
-        "editable": true,
-        "gnetId": null,
-        "graphTooltip": 0,
-        "id": 4,
-        "links": [],
-        "panels": [
-            {
-                "collapsed": false,
-                "datasource": null,
-                "gridPos": {
-                    "h": 1,
-                    "w": 24,
-                    "x": 0,
-                    "y": 0
-                },
-                "id": 100,
-                "panels": [],
-                "title": "DAG Error Overview",
-                "type": "row"
+        {
+          "datasource": null,
+          "description": "Total number of failed tasks for this DAG",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
+                ]
+              }
             },
-            {
-                "datasource": null,
-                "description": "Total number of failed tasks for this DAG",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 1
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 3
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 5,
-                    "w": 4,
-                    "x": 0,
-                    "y": 1
-                },
-                "id": 101,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 16,
-                        "valueSize": 48
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "sum(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"})",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Total Failed Tasks",
-                "type": "stat"
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
+          "id": 101,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
             },
-            {
-                "datasource": null,
-                "description": "Number of times this DAG failed to complete",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "mappings": [],
-                        "noValue": "0",
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 1
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 2
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 5,
-                    "w": 4,
-                    "x": 4,
-                    "y": 1
-                },
-                "id": 102,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 16,
-                        "valueSize": 48
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "increase(af_agg_dagrun_duration_failed{dag_id=\"$dag_id\"}[24h])",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "DAG Failures (24h)",
-                "type": "stat"
+            "text": {
+              "titleSize": 16,
+              "valueSize": 48
             },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
             {
-                "datasource": null,
-                "description": "Failure rate percentage for this DAG",
-                "fieldConfig": {
-                    "defaults": {
-                        "color": {
-                            "mode": "thresholds"
-                        },
-                        "custom": {},
-                        "max": 100,
-                        "min": 0,
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "yellow",
-                                    "value": 5
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 15
-                                }
-                            ]
-                        },
-                        "unit": "percent"
-                    },
-                    "overrides": []
-                },
-                "gridPos": {
-                    "h": 5,
-                    "w": 5,
-                    "x": 8,
-                    "y": 1
-                },
-                "id": 103,
-                "options": {
-                    "colorMode": "background",
-                    "graphMode": "area",
-                    "justifyMode": "center",
-                    "orientation": "auto",
-                    "reduceOptions": {
-                        "calcs": [
-                            "lastNotNull"
-                        ],
-                        "fields": "",
-                        "values": false
-                    },
-                    "text": {
-                        "titleSize": 16,
-                        "valueSize": 36
-                    },
-                    "textMode": "auto"
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "(sum(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}) / (sum(af_agg_ti_finish{state=\"success\", dag_id=\"$dag_id\"}) + sum(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}))) * 100",
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Task Failure Rate",
-                "type": "stat"
-            },
-            {
-                "collapsed": false,
-                "datasource": null,
-                "gridPos": {
-                    "h": 1,
-                    "w": 24,
-                    "x": 0,
-                    "y": 6
-                },
-                "id": 200,
-                "panels": [],
-                "title": "Failed Tasks in DAG",
-                "type": "row"
-            },
-            {
-                "datasource": null,
-                "description": "List of tasks that failed in this DAG",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {
-                            "align": null,
-                            "displayMode": "auto",
-                            "filterable": true
-                        },
-                        "mappings": [],
-                        "thresholds": {
-                            "mode": "absolute",
-                            "steps": [
-                                {
-                                    "color": "green",
-                                    "value": null
-                                },
-                                {
-                                    "color": "red",
-                                    "value": 1
-                                }
-                            ]
-                        }
-                    },
-                    "overrides": [
-                        {
-                            "matcher": {
-                                "id": "byName",
-                                "options": "Failure Count"
-                            },
-                            "properties": [
-                                {
-                                    "id": "custom.displayMode",
-                                    "value": "color-background"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 0,
-                    "y": 7
-                },
-                "id": 201,
-                "options": {
-                    "showHeader": true,
-                    "sortBy": [
-                        {
-                            "desc": true,
-                            "displayName": "Failure Count"
-                        }
-                    ]
-                },
-                "pluginVersion": "7.3.5",
-                "targets": [
-                    {
-                        "expr": "af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}",
-                        "format": "table",
-                        "instant": true,
-                        "interval": "",
-                        "legendFormat": "",
-                        "refId": "A"
-                    }
-                ],
-                "title": "Failed Tasks in DAG",
-                "transformations": [
-                    {
-                        "id": "organize",
-                        "options": {
-                            "excludeByName": {
-                                "Time": true,
-                                "__name__": true,
-                                "airflow_id": true,
-                                "instance": true,
-                                "job": true,
-                                "state": true,
-                                "dag_id": true
-                            },
-                            "indexByName": {},
-                            "renameByName": {
-                                "Value": "Failure Count",
-                                "task_id": "Task ID"
-                            }
-                        }
-                    }
-                ],
-                "type": "table"
-            },
-            {
-                "aliasColors": {},
-                "bars": false,
-                "dashLength": 10,
-                "dashes": false,
-                "datasource": null,
-                "description": "Timeline showing when tasks failed vs succeeded",
-                "fieldConfig": {
-                    "defaults": {
-                        "custom": {}
-                    },
-                    "overrides": []
-                },
-                "fill": 1,
-                "fillGradient": 0,
-                "gridPos": {
-                    "h": 8,
-                    "w": 12,
-                    "x": 12,
-                    "y": 7
-                },
-                "hiddenSeries": false,
-                "id": 202,
-                "legend": {
-                    "avg": false,
-                    "current": false,
-                    "max": false,
-                    "min": false,
-                    "show": true,
-                    "total": false,
-                    "values": false
-                },
-                "lines": true,
-                "linewidth": 2,
-                "nullPointMode": "null",
-                "options": {
-                    "alertThreshold": true
-                },
-                "percentage": false,
-                "pluginVersion": "7.3.5",
-                "pointradius": 2,
-                "points": false,
-                "renderer": "flot",
-                "seriesOverrides": [
-                    {
-                        "alias": "/.*failed.*/",
-                        "color": "red"
-                    },
-                    {
-                        "alias": "/.*success.*/",
-                        "color": "green"
-                    }
-                ],
-                "spaceLength": 10,
-                "stack": false,
-                "steppedLine": false,
-                "targets": [
-                    {
-                        "expr": "rate(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}[5m])",
-                        "interval": "",
-                        "legendFormat": "Failed Tasks Rate",
-                        "refId": "A"
-                    },
-                    {
-                        "expr": "rate(af_agg_ti_finish{state=\"success\", dag_id=\"$dag_id\"}[5m])",
-                        "interval": "",
-                        "legendFormat": "Successful Tasks Rate",
-                        "refId": "B"
-                    }
-                ],
-                "thresholds": [],
-                "timeFrom": null,
-                "timeRegions": [],
-                "timeShift": null,
-                "title": "Task Success vs Failure Rate Over Time",
-                "tooltip": {
-                    "shared": true,
-                    "sort": 0,
-                    "value_type": "individual"
-                },
-                "type": "graph",
-                "xAxis": {
-                    "buckets": null,
-                    "mode": "time",
-                    "name": null,
-                    "show": true,
-                    "values": []
-                },
-                "yAxes": [
-                    {
-                        "format": "short",
-                        "label": null,
-                        "logBase": 1,
-                        "max": null,
-                        "min": "0",
-                        "show": true
-                    },
-                    {
-                        "format": "short",
-                        "label": null,
-                        "logBase": 1,
-                        "max": null,
-                        "min": null,
-                        "show": true
-                    }
-                ],
-                "yAxis": {
-                    "align": false,
-                    "alignLevel": null
-                }
+              "expr": "sum(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
             }
-        ],
-        "refresh": "5s",
-        "schemaVersion": 26,
-        "style": "dark",
-        "tags": ["airflow", "errors", "dag"],
-        "templating": {
-            "list": [
-                {
-                    "allValue": null,
-                    "current": {
-                        "selected": true,
-                        "text": "java_dag",
-                        "value": "java_dag"
-                    },
-                    "datasource": "Prometheus",
-                    "definition": "label_values(dag_id)",
-                    "error": null,
-                    "hide": 0,
-                    "includeAll": false,
-                    "label": "DAG ID",
-                    "multi": false,
-                    "name": "dag_id",
-                    "options": [],
-                    "query": "label_values(dag_id)",
-                    "refresh": 1,
-                    "regex": "",
-                    "skipUrlSync": false,
-                    "sort": 0,
-                    "type": "query",
-                    "useTags": false
+          ],
+          "title": "Total Failed Tasks",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "description": "Number of times this DAG failed to complete",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 2
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 4,
+            "y": 1
+          },
+          "id": 102,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 16,
+              "valueSize": 48
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "increase(af_agg_dagrun_duration_failed{dag_id=\"$dag_id\"}[24h])",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "DAG Failures (24h)",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "description": "Failure rate percentage for this DAG",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 5
+                  },
+                  {
+                    "color": "red",
+                    "value": 15
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 8,
+            "y": 1
+          },
+          "id": 103,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 16,
+              "valueSize": 36
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "(sum(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}) / (sum(af_agg_ti_finish{state=\"success\", dag_id=\"$dag_id\"}) + sum(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}))) * 100",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Task Failure Rate",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 6
+          },
+          "id": 200,
+          "panels": [],
+          "title": "Failed Tasks in DAG",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "description": "List of tasks that failed in this DAG",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": null,
+                "displayMode": "auto",
+                "filterable": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Failure Count"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 7
+          },
+          "id": 201,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Failure Count"
+              }
+            ]
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}",
+              "format": "table",
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Failed Tasks in DAG",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "airflow_id": true,
+                  "instance": true,
+                  "job": true,
+                  "state": true,
+                  "dag_id": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Failure Count",
+                  "task_id": "Task ID"
                 }
-            ]
+              }
+            }
+          ],
+          "type": "table"
         },
-        "time": {
-            "from": "now-6h",
-            "to": "now"
-        },
-        "timepicker": {
-            "refresh_intervals": [
-                "5s",
-                "10s",
-                "30s",
-                "1m",
-                "5m",
-                "15m",
-                "30m",
-                "1h",
-                "2h",
-                "1d"
-            ]
-        },
-        "timezone": "",
-        "title": "Airflow DAG Errors Dashboard",
-        "uid": "airflow-dag-errors",
-        "version": 1
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "description": "Timeline showing when tasks failed vs succeeded",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 7
+          },
+          "hiddenSeries": false,
+          "id": 202,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "7.3.5",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "/.*failed.*/",
+              "color": "red"
+            },
+            {
+              "alias": "/.*success.*/",
+              "color": "green"
+            }
+          ],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "rate(af_agg_ti_finish{state=\"failed\", dag_id=\"$dag_id\"}[5m])",
+              "interval": "",
+              "legendFormat": "Failed Tasks Rate",
+              "refId": "A"
+            },
+            {
+              "expr": "rate(af_agg_ti_finish{state=\"success\", dag_id=\"$dag_id\"}[5m])",
+              "interval": "",
+              "legendFormat": "Successful Tasks Rate",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Task Success vs Failure Rate Over Time",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xAxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yAxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yAxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [
+        "airflow",
+        "errors",
+        "dag"],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "text": "java_dag",
+              "value": "java_dag"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(dag_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "DAG ID",
+            "multi": false,
+            "name": "dag_id",
+            "options": [],
+            "query": "label_values(dag_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ]
+      },
+      "timezone": "",
+      "title": "Airflow DAG Errors Dashboard",
+      "uid": "airflow-dag-errors",
+      "version": 1
     }
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: airflow-system-health-alerts
-  namespace: airflow
-data:
-  system-health-rules.yml: |
-    groups:
-    - name: airflow.system.health
-      rules:
-      # Scheduler Heartbeat - Crítico
-      - alert: AirflowSchedulerDown
-        expr: increase(af_agg_scheduler_heartbeat[5m]) == 0
-        for: 2m
-        labels:
-          severity: critical
-          component: scheduler
-          team: data-platform
-        annotations:
-          summary: "Airflow Scheduler não está enviando heartbeat"
-          description: "O scheduler do Airflow {{ $labels.airflow_id }} não enviou heartbeat nos últimos 5 minutos. Sistema pode estar parado."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/scheduler-down"
-          
-      # DAG Import Errors - Crítico
-      - alert: AirflowDAGImportErrors
-        expr: af_agg_dag_processing_import_errors > 0
-        for: 1m
-        labels:
-          severity: critical
-          component: dag-processor
-          team: data-platform
-        annotations:
-          summary: "Airflow detectou erros ao importar DAGs"
-          description: "{{ $value }} erro(s) de importação de DAG detectados no Airflow {{ $labels.airflow_id }}. DAGs podem não estar funcionando."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/dag-import-errors"
+  
 
-      # DAG Processing Time - Warning
-      - alert: AirflowDAGProcessingTimeSlow
-        expr: af_agg_dag_processing_total_parse_time > 300
-        for: 5m
-        labels:
-          severity: warning
-          component: dag-processor
-          team: data-platform
-        annotations:
-          summary: "Tempo de processamento de DAGs está alto"
-          description: "Processamento de DAGs está levando {{ $value }}s no Airflow {{ $labels.airflow_id }}. Normal é < 300s."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/slow-dag-processing"
+  airflow-performance.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 6,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [],
+          "title": "Executor Performance",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "vis": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 101,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "expr": "af_agg_executor_open_slots{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "Open Slots",
+              "refId": "A"
+            },
+            {
+              "expr": "af_agg_executor_queued_tasks{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "Queued Tasks",
+              "refId": "B"
+            },
+            {
+              "expr": "af_agg_executor_running_tasks{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "Running Tasks",
+              "refId": "C"
+            }
+          ],
+          "title": "Executor Slots and Tasks",
+          "type": "timeseries"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "vis": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "id": 102,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "expr": "af_agg_scheduler_loop_duration{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "Scheduler Loop Duration",
+              "refId": "A"
+            },
+            {
+              "expr": "af_agg_scheduler_critical_section_duration{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "Critical Section Duration",
+              "refId": "B"
+            }
+          ],
+          "title": "Scheduler Performance",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "id": 200,
+          "panels": [],
+          "title": "Pool Monitoring",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": null,
+                "displayMode": "auto",
+                "filterable": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 201,
+          "options": {
+            "showHeader": true
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_pool_open_slots{airflow_id=\"$airflow_id\"}",
+              "format": "table",
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Pool Status",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "airflow_id": true,
+                  "instance": true,
+                  "job": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Open Slots",
+                  "pool_name": "Pool Name"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [
+        "airflow",
+        "performance",
+        "resources"],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "airflow",
+              "value": "airflow"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(airflow_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Airflow Instance Id",
+            "multi": false,
+            "name": "airflow_id",
+            "options": [],
+            "query": "label_values(airflow_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Airflow Performance Dashboard",
+      "uid": "airflow-performance",
+      "version": 1
+    }
 
-      # DAG Processing Time - Critical
-      - alert: AirflowDAGProcessingTimeCritical
-        expr: af_agg_dag_processing_total_parse_time > 600
-        for: 2m
-        labels:
-          severity: critical
-          component: dag-processor
-          team: data-platform
-        annotations:
-          summary: "Tempo de processamento de DAGs criticamente alto"
-          description: "Processamento de DAGs está levando {{ $value }}s no Airflow {{ $labels.airflow_id }}. Pode indicar problema grave."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-dag-processing"
+  airflow-dag-processing.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 7,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [],
+          "title": "DAG Processing Overview",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 1
+          },
+          "id": 101,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_import_errors{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "DAG Import Errors",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 1
+          },
+          "id": 102,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_total_parse_time{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Total Parse Time",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 1
+          },
+          "id": 103,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_processor_timeouts{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Processor Timeouts",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "id": 104,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_processes{airflow_id=\"$airflow_id\"}",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Processing Processes",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 200,
+          "panels": [],
+          "title": "DAG File Processing Details",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": null,
+                "displayMode": "auto",
+                "filterable": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 6
+          },
+          "id": 201,
+          "options": {
+            "showHeader": true
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_last_runtime{airflow_id=\"$airflow_id\"}",
+              "format": "table",
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "DAG Processing Runtime by File",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "airflow_id": true,
+                  "instance": true,
+                  "job": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Runtime (seconds)",
+                  "dag_file": "DAG File"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": null,
+                "displayMode": "auto",
+                "filterable": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 60
+                  },
+                  {
+                    "color": "red",
+                    "value": 300
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Seconds Ago"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 6
+          },
+          "id": 202,
+          "options": {
+            "showHeader": true
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_dag_processing_last_run_seconds{airflow_id=\"$airflow_id\"}",
+              "format": "table",
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Last Run Time by File",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "airflow_id": true,
+                  "instance": true,
+                  "job": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Seconds Ago",
+                  "dag_file": "DAG File"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [
+        "airflow",
+        "dag",
+        "processing"],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "airflow",
+              "value": "airflow"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(airflow_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Airflow Instance Id",
+            "multi": false,
+            "name": "airflow_id",
+            "options": [],
+            "query": "label_values(airflow_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Airflow DAG Processing Dashboard",
+      "uid": "airflow-dag-processing",
+      "version": 1
+    }
 
-      # Executor Slots - No open slots
-      - alert: AirflowExecutorNoOpenSlots
-        expr: af_agg_executor_open_slots == 0
-        for: 5m
-        labels:
-          severity: warning
-          component: executor
-          team: data-platform
-        annotations:
-          summary: "Airflow Executor sem slots disponíveis"
-          description: "Executor do Airflow {{ $labels.airflow_id }} está sem slots livres. Tasks ficarão em fila."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/no-executor-slots"
+  airflow-task-durations.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 8,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [],
+          "title": "Task Duration Analytics",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "vis": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 101,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, af_agg_dag_task_duration{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"})",
+              "interval": "",
+              "legendFormat": "p50 Duration",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, af_agg_dag_task_duration{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"})",
+              "interval": "",
+              "legendFormat": "p95 Duration",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, af_agg_dag_task_duration{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"})",
+              "interval": "",
+              "legendFormat": "p99 Duration",
+              "refId": "C"
+            }
+          ],
+          "title": "Task Duration Percentiles",
+          "type": "timeseries"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "vis": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "id": 102,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "expr": "af_agg_task_queued_duration{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"}",
+              "interval": "",
+              "legendFormat": "Queued Duration - {{task_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Task Queued Duration by Task",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "id": 200,
+          "panels": [],
+          "title": "DAG Run Duration",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "vis": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Success Duration"
+                },
+                "properties": [
+                  {
+                    "id": "color.fixedColor",
+                    "value": "green"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Failed Duration"
+                },
+                "properties": [
+                  {
+                    "id": "color.fixedColor",
+                    "value": "red"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 10
+          },
+          "id": 201,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "expr": "af_agg_dagrun_duration_success{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"}",
+              "interval": "",
+              "legendFormat": "Success Duration",
+              "refId": "A"
+            },
+            {
+              "expr": "af_agg_dagrun_duration_failed{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"}",
+              "interval": "",
+              "legendFormat": "Failed Duration",
+              "refId": "B"
+            }
+          ],
+          "title": "DAG Run Duration (Success vs Failed)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "vis": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 10
+          },
+          "id": 202,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "expr": "af_agg_dagrun_schedule_delay{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"}",
+              "interval": "",
+              "legendFormat": "Schedule Delay",
+              "refId": "A"
+            },
+            {
+              "expr": "af_agg_dagrun_first_task_scheduling_delay{airflow_id=\"$airflow_id\", dag_id=\"$dag_id\"}",
+              "interval": "",
+              "legendFormat": "First Task Scheduling Delay",
+              "refId": "B"
+            }
+          ],
+          "title": "DAG Run Delays",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [
+        "airflow",
+        "duration",
+        "performance"],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "airflow",
+              "value": "airflow"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(airflow_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Airflow Instance Id",
+            "multi": false,
+            "name": "airflow_id",
+            "options": [],
+            "query": "label_values(airflow_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {
+              "selected": true,
+              "text": "example_dag",
+              "value": "example_dag"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(dag_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "DAG ID",
+            "multi": false,
+            "name": "dag_id",
+            "options": [],
+            "query": "label_values(dag_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Airflow Task Durations Dashboard",
+      "uid": "airflow-task-durations",
+      "version": 1
+    }
 
-      # Executor Slots - High utilization
-      - alert: AirflowExecutorHighUtilization
-        expr: (af_agg_executor_running_tasks / (af_agg_executor_open_slots + af_agg_executor_running_tasks)) > 0.85
-        for: 10m
-        labels:
-          severity: warning
-          component: executor
-          team: data-platform
-        annotations:
-          summary: "Executor do Airflow com alta utilização"
-          description: "Executor está com {{ $value | humanizePercentage }} de utilização no Airflow {{ $labels.airflow_id }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/high-executor-utilization"
-
-      # DAG Processing Processor Timeouts
-      - alert: AirflowDAGProcessorTimeouts
-        expr: increase(af_agg_dag_processing_processor_timeouts[30m]) > 0
-        for: 1m
-        labels:
-          severity: warning
-          component: dag-processor
-          team: data-platform
-        annotations:
-          summary: "DAG Processor Timeouts detectados"
-          description: "{{ $value }} timeout(s) do processador de DAG nos últimos 30min no Airflow {{ $labels.airflow_id }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/processor-timeouts"
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: airflow-performance-alerts
-  namespace: airflow
-data:
-  performance-rules.yml: |
-    groups:
-    - name: airflow.performance
-      rules:
-      # Task Duration - Slow tasks
-      - alert: AirflowSlowTaskDuration
-        expr: af_agg_dag_task_duration > 3600000  # 1 hour in milliseconds
-        for: 15m
-        labels:
-          severity: warning
-          component: task-performance
-          team: data-platform
-        annotations:
-          summary: "Task com duração alta detectada"
-          description: "Task {{ $labels.task_id }} no DAG {{ $labels.dag_id }} está levando {{ $value | humanizeDuration }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/slow-tasks"
-
-      # Task Duration - Extremely slow tasks  
-      - alert: AirflowExtremelySlowTask
-        expr: af_agg_dag_task_duration > 7200000  # 2 hours in milliseconds
-        for: 5m
-        labels:
-          severity: critical
-          component: task-performance
-          team: data-platform
-        annotations:
-          summary: "Task extremamente lenta detectada"
-          description: "Task {{ $labels.task_id }} no DAG {{ $labels.dag_id }} levando {{ $value | humanizeDuration }}!"
-          runbook_url: "https://wiki.company.com/airflow/runbooks/extremely-slow-tasks"
-
-      # DAG Run Duration - Slow DAGs (success)
-      - alert: AirflowSlowDAGRun
-        expr: af_agg_dagrun_duration_success > 10800000  # 3 hours in milliseconds
-        for: 30m
-        labels:
-          severity: warning
-          component: dag-performance
-          team: data-platform
-        annotations:
-          summary: "DAG com duração alta"
-          description: "DAG {{ $labels.dag_id }} levou {{ $value | humanizeDuration }} para completar."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/slow-dags"
-
-      # Schedule Delay - High scheduling delays
-      - alert: AirflowHighScheduleDelay
-        expr: af_agg_dagrun_schedule_delay > 900000  # 15 minutes in milliseconds
-        for: 20m
-        labels:
-          severity: warning
-          component: scheduling
-          team: data-platform
-        annotations:
-          summary: "Alto atraso de agendamento detectado"
-          description: "DAG {{ $labels.dag_id }} com atraso de agendamento: {{ $value | humanizeDuration }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/schedule-delay"
-
-      # Schedule Delay - Critical scheduling delays
-      - alert: AirflowCriticalScheduleDelay
-        expr: af_agg_dagrun_schedule_delay > 1800000  # 30 minutes in milliseconds
-        for: 10m
-        labels:
-          severity: critical
-          component: scheduling
-          team: data-platform
-        annotations:
-          summary: "Atraso crítico de agendamento!"
-          description: "DAG {{ $labels.dag_id }} com atraso CRÍTICO: {{ $value | humanizeDuration }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-schedule-delay"
-
-      # First Task Scheduling Delay
-      - alert: AirflowFirstTaskSchedulingDelay
-        expr: af_agg_dagrun_first_task_scheduling_delay > 600000  # 10 minutes in milliseconds
-        for: 15m
-        labels:
-          severity: warning
-          component: task-scheduling
-          team: data-platform
-        annotations:
-          summary: "Atraso alto para primeira task"
-          description: "DAG {{ $labels.dag_id }} com atraso na primeira task: {{ $value | humanizeDuration }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/first-task-delay"
-
-      # Critical Section Duration - Scheduler bottleneck
-      - alert: AirflowSchedulerCriticalSectionSlow
-        expr: af_agg_scheduler_critical_section_duration > 30000  # 30 seconds
-        for: 10m
-        labels:
-          severity: warning
-          component: scheduler-performance
-          team: data-platform
-        annotations:
-          summary: "Seção crítica do scheduler lenta"
-          description: "Seção crítica do scheduler levando {{ $value | humanizeDuration }}. Pode indicar gargalo."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/scheduler-critical-section"
-
-      # Queue Wait Time - High queue times (usando queued_tasks como proxy)
-      - alert: AirflowHighQueueWaitTime
-        expr: af_agg_executor_queued_tasks > 10
-        for: 15m
-        labels:
-          severity: warning
-          component: queue-performance
-          team: data-platform
-        annotations:
-          summary: "Alto tempo de espera na fila"
-          description: "{{ $value }} tasks em fila no executor. Tasks podem estar esperando muito."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/high-queue-time"
-
-      # Queue Wait Time - Critical queue buildup
-      - alert: AirflowCriticalQueueBuildup
-        expr: af_agg_executor_queued_tasks > 50
-        for: 5m
-        labels:
-          severity: critical
-          component: queue-performance
-          team: data-platform
-        annotations:
-          summary: "Acúmulo crítico na fila de execução"
-          description: "{{ $value }} tasks em fila! Possível gargalo ou problema no executor."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-queue-buildup"
-
-      # DAG Processing Duration - Per file
-      - alert: AirflowSlowDAGProcessing
-        expr: af_agg_dag_processing_duration > 60000  # 1 minute
-        for: 10m
-        labels:
-          severity: warning
-          component: dag-processing
-          team: data-platform
-        annotations:
-          summary: "Processamento lento de arquivo DAG"
-          description: "Arquivo {{ $labels.dag_file }} levando {{ $value | humanizeDuration }} para processar."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/slow-dag-processing"
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: airflow-capacity-alerts
-  namespace: airflow
-data:
-  capacity-rules.yml: |
-    groups:
-    - name: airflow.capacity
-      rules:
-      # Running Tasks - High utilization
-      - alert: AirflowHighRunningTasks
-        expr: af_agg_executor_running_tasks > 80
-        for: 10m
-        labels:
-          severity: warning
-          component: executor-capacity
-          team: data-platform
-        annotations:
-          summary: "Alto número de tasks em execução"
-          description: "{{ $value }} tasks executando simultaneamente. Pode indicar necessidade de scaling."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/high-running-tasks"
-
-      # Running Tasks - Critical utilization
-      - alert: AirflowCriticalRunningTasks
-        expr: af_agg_executor_running_tasks > 150
-        for: 5m
-        labels:
-          severity: critical
-          component: executor-capacity
-          team: data-platform
-        annotations:
-          summary: "Número crítico de tasks em execução"
-          description: "{{ $value }} tasks executando! Sistema pode estar sobrecarregado."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-running-tasks"
-
-      # Queued Tasks - Backlog building up
-      - alert: AirflowQueuedTasksBacklog
-        expr: af_agg_executor_queued_tasks > 20
-        for: 15m
-        labels:
-          severity: warning
-          component: executor-capacity
-          team: data-platform
-        annotations:
-          summary: "Backlog de tasks em fila"
-          description: "{{ $value }} tasks em fila. Capacidade pode estar insuficiente."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/queued-tasks-backlog"
-
-      # Queued Tasks - Critical backlog
-      - alert: AirflowQueuedTasksCritical
-        expr: af_agg_executor_queued_tasks > 100
-        for: 5m
-        labels:
-          severity: critical
-          component: executor-capacity
-          team: data-platform
-        annotations:
-          summary: "Backlog crítico de tasks em fila"
-          description: "{{ $value }} tasks em fila! Necessário scaling urgente."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-queued-tasks"
-
-      # Pool Utilization - High pool usage
-      - alert: AirflowPoolHighUtilization
-        expr: |
-          (af_agg_pool_running_slots / (af_agg_pool_open_slots + af_agg_pool_running_slots)) > 0.90
-        for: 15m
-        labels:
-          severity: warning
-          component: pool-capacity
-          team: data-platform
-        annotations:
-          summary: "Pool {{ $labels.pool_name }} com alta utilização"
-          description: "Pool {{ $labels.pool_name }} está com {{ $value | humanizePercentage }} de utilização."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/pool-high-utilization"
-
-      # Pool Utilization - No available slots
-      - alert: AirflowPoolNoAvailableSlots
-        expr: af_agg_pool_open_slots == 0
-        for: 10m
-        labels:
-          severity: critical
-          component: pool-capacity
-          team: data-platform
-        annotations:
-          summary: "Pool {{ $labels.pool_name }} sem slots disponíveis"
-          description: "Pool {{ $labels.pool_name }} está completamente ocupado. Tasks ficarão esperando."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/pool-no-slots"
-
-      # Pool Starving Tasks - Tasks waiting for pool slots
-      - alert: AirflowPoolStarvingTasks
-        expr: af_agg_pool_starving_tasks > 5
-        for: 10m
-        labels:
-          severity: warning
-          component: pool-capacity
-          team: data-platform
-        annotations:
-          summary: "Tasks aguardando slots no pool {{ $labels.pool_name }}"
-          description: "{{ $value }} tasks aguardando slots no pool {{ $labels.pool_name }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/pool-starving-tasks"
-
-      # Scheduler Tasks Starving - General scheduler capacity
-      - alert: AirflowSchedulerTasksStarving
-        expr: af_agg_scheduler_tasks_starving > 10
-        for: 10m
-        labels:
-          severity: warning
-          component: scheduler-capacity
-          team: data-platform
-        annotations:
-          summary: "Tasks 'starving' no scheduler"
-          description: "{{ $value }} tasks 'starving' no scheduler. Pode indicar problema de capacidade."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/scheduler-starving-tasks"
-
-      # Orphaned Tasks - Tasks without proper cleanup
-      - alert: AirflowOrphanedTasksDetected
-        expr: increase(af_agg_scheduler_orphaned_tasks_cleared[1h]) > 5
-        for: 5m
-        labels:
-          severity: warning
-          component: task-lifecycle
-          team: data-platform
-        annotations:
-          summary: "Tasks órfãs detectadas e limpas"
-          description: "{{ $value }} tasks órfãs foram limpas na última hora. Pode indicar problema no ciclo de vida."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/orphaned-tasks"
-
-      # Critical Section Busy - Scheduler contention
-      - alert: AirflowCriticalSectionBusy
-        expr: increase(af_agg_scheduler_critical_section_busy[10m]) > 5
-        for: 5m
-        labels:
-          severity: warning
-          component: scheduler-capacity
-          team: data-platform
-        annotations:
-          summary: "Seção crítica do scheduler ocupada frequentemente"
-          description: "{{ $value }} tentativas de acesso à seção crítica bloqueadas nos últimos 10min."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-section-busy"
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: airflow-business-impact-alerts
-  namespace: airflow
-data:
-  business-impact-rules.yml: |
-    groups:
-    - name: airflow.business.impact
-      rules:
-      # Daily Task Volume - Low processing volume
-      - alert: AirflowLowDailyTaskVolume
-        expr: |
-          sum(increase(af_agg_ti_start[24h])) < 100
-        for: 2h
-        labels:
-          severity: warning
-          component: business-metrics
-          team: data-platform
-          business_impact: medium
-        annotations:
-          summary: "Volume diário de tasks abaixo do esperado"
-          description: "Apenas {{ $value }} tasks foram iniciadas nas últimas 24h. Volume esperado > 100."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/low-task-volume"
-
-      # Weekly Task Volume - Significant drop
-      - alert: AirflowWeeklyTaskVolumeDrop
-        expr: |
-          (
-            sum(increase(af_agg_ti_start[24h])) / 
-            sum(increase(af_agg_ti_start[24h] offset 7d))
-          ) < 0.7
-        for: 4h
-        labels:
-          severity: warning
-          component: business-metrics
-          team: data-platform
-          business_impact: high
-        annotations:
-          summary: "Queda significativa no volume semanal de tasks"
-          description: "Volume de tasks caiu {{ $value | humanizePercentage }} comparado à semana passada."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/weekly-volume-drop"
-
-      # Critical DAG Health - Revenue impacting DAGs
-      - alert: AirflowCriticalDAGDown
-        expr: |
-          time() - max by (dag_id) (af_agg_ti_start{dag_id=~"revenue_.*|billing_.*|critical_.*"}) > 86400
-        for: 30m
-        labels:
-          severity: critical
-          component: critical-dags
-          team: data-platform
-          business_impact: critical
-        annotations:
-          summary: "DAG crítica {{ $labels.dag_id }} não executou em 24h"
-          description: "DAG crítica {{ $labels.dag_id }} não teve tasks iniciadas nas últimas 24h. IMPACTO NO NEGÓCIO!"
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-dag-down"
-
-      # Critical DAG Health - Data pipeline failures
-      - alert: AirflowDataPipelineFailure
-        expr: |
-          increase(af_agg_ti_finish{state="failed", dag_id=~"data_.*|etl_.*|pipeline_.*"}[1h]) > 0
-        for: 15m
-        labels:
-          severity: critical
-          component: data-pipelines
-          team: data-platform
-          business_impact: high
-        annotations:
-          summary: "Falha em pipeline de dados crítico"
-          description: "Pipeline {{ $labels.dag_id }} teve falhas na última hora. Dados podem estar desatualizados."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/data-pipeline-failure"
-
-      # Data Freshness - Tasks not running in expected window
-      - alert: AirflowDataFreshnessIssue
-        expr: |
-          time() - max by (dag_id) (af_agg_ti_finish{dag_id=~"daily_.*", state="success"}) > 129600  # 36 hours
-        for: 2h
-        labels:
-          severity: warning
-          component: data-freshness
-          team: data-platform
-          business_impact: medium
-        annotations:
-          summary: "Dados podem estar desatualizados para {{ $labels.dag_id }}"
-          description: "DAG {{ $labels.dag_id }} não teve sucesso há mais de 36h. Dados podem estar stale."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/data-freshness"
-
-      # Critical Data Freshness - Business critical data
-      - alert: AirflowCriticalDataStale
-        expr: |
-          time() - max by (dag_id) (af_agg_ti_finish{dag_id=~"reporting_.*|dashboard_.*|metrics_.*", state="success"}) > 172800  # 48 hours
-        for: 1h
-        labels:
-          severity: critical
-          component: data-freshness
-          team: data-platform
-          business_impact: critical
-        annotations:
-          summary: "Dados críticos para negócio desatualizados"
-          description: "DAG {{ $labels.dag_id }} não teve sucesso há mais de 48h. IMPACTO EM REPORTS/DASHBOARDS!"
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-data-stale"
-
-      # Cost Efficiency - High failure rate (wasted resources)
-      - alert: AirflowHighResourceWaste
-        expr: |
-          (
-            sum by (dag_id) (rate(af_agg_ti_failures[24h])) /
-            (sum by (dag_id) (rate(af_agg_ti_failures[24h])) + sum by (dag_id) (rate(af_agg_ti_successes[24h])))
-          ) > 0.20
-        for: 6h
-        labels:
-          severity: warning
-          component: cost-efficiency
-          team: data-platform
-          business_impact: medium
-        annotations:
-          summary: "Alto desperdício de recursos no DAG {{ $labels.dag_id }}"
-          description: "DAG {{ $labels.dag_id }} com {{ $value | humanizePercentage }} de falhas. Alto custo por desperdício."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/resource-waste"
-
-      # Business Hours Performance - SLA during business hours
-      - alert: AirflowBusinessHoursSLA
-        expr: |
-          increase(af_agg_sla_miss{dag_id=~"business_.*|report_.*"}[1h]) > 0 and hour() >= 8 and hour() <= 18
-        for: 10m
-        labels:
-          severity: critical
-          component: business-sla
-          team: data-platform
-          business_impact: critical
-        annotations:
-          summary: "SLA miss durante horário comercial!"
-          description: "SLA miss no DAG {{ $labels.dag_id }} durante horário comercial. Impacto em usuários!"
-          runbook_url: "https://wiki.company.com/airflow/runbooks/business-hours-sla"
-
-      # End-of-Day Processing - Critical for daily reports
-      - alert: AirflowEndOfDayProcessingDelay
-        expr: |
-          hour() > 22 and 
-          time() - max by (dag_id) (af_agg_ti_start{dag_id=~"eod_.*|daily_report_.*"}) > 7200  # 2 hours
-        for: 30m
-        labels:
-          severity: critical
-          component: eod-processing
-          team: data-platform
-          business_impact: critical
-        annotations:
-          summary: "Processamento end-of-day atrasado"
-          description: "DAG {{ $labels.dag_id }} não iniciou processamento noturno. Reports matinais podem atrasar!"
-          runbook_url: "https://wiki.company.com/airflow/runbooks/eod-processing-delay"
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: airflow-common-market-alerts
-  namespace: airflow
-data:
-  common-market-rules.yml: |
-    groups:
-    - name: airflow.common.market.alerts
-      rules:
-      # Task failure rate > 5% em janela de tempo
-      - alert: AirflowTaskFailureRateHigh
-        expr: |
-          (
-            sum(rate(af_agg_ti_failures[1h])) /
-            (sum(rate(af_agg_ti_failures[1h])) + sum(rate(af_agg_ti_successes[1h])))
-          ) > 0.05
-        for: 30m
-        labels:
-          severity: warning
-          component: task-reliability
-          team: data-platform
-          market_standard: failure-rate-slo
-        annotations:
-          summary: "Taxa de falha de tasks acima de 5%"
-          description: "Taxa de falha está em {{ $value | humanizePercentage }} na última hora. Padrão de mercado é < 5%."
-          runbook_url: "https://wiki.company.com/airflow/slo/task-failure-rate"
-
-      # Scheduler não enviou heartbeat em X minutos
-      - alert: AirflowSchedulerHeartbeatMissing
-        expr: increase(af_agg_scheduler_heartbeat[3m]) == 0
-        for: 3m
-        labels:
-          severity: critical
-          component: scheduler-health
-          team: data-platform
-          market_standard: scheduler-availability
-        annotations:
-          summary: "Scheduler parou de enviar heartbeat"
-          description: "Scheduler do Airflow {{ $labels.airflow_id }} não enviou heartbeat nos últimos 3 minutos."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/scheduler-heartbeat-missing"
-
-      # SLA miss em DAGs críticas
-      - alert: AirflowCriticalDAGSLAViolation
-        expr: |
-          increase(af_agg_sla_miss{dag_id=~".*critical.*|.*prod.*|.*revenue.*|.*important.*"}[5m]) > 0
-        for: 0m
-        labels:
-          severity: critical
-          component: critical-sla
-          team: data-platform
-          market_standard: critical-dag-sla
-          business_impact: high
-        annotations:
-          summary: "Violação de SLA em DAG crítica"
-          description: "SLA violado na DAG crítica {{ $labels.dag_id }}, task {{ $labels.task_id }}."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-dag-sla"
-
-      # Queue buildup > threshold
-      - alert: AirflowQueueBuildupThreshold
-        expr: af_agg_executor_queued_tasks > 25
-        for: 10m
-        labels:
-          severity: warning
-          component: queue-management
-          team: data-platform
-          market_standard: queue-threshold
-        annotations:
-          summary: "Fila de tasks acima do threshold"
-          description: "{{ $value }} tasks em fila no executor. Threshold padrão é 25 tasks."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/queue-buildup"
-
-      # DAG import errors > 0
-      - alert: AirflowDAGImportErrorsDetected
-        expr: af_agg_dag_processing_import_errors > 0
-        for: 2m
-        labels:
-          severity: critical
-          component: dag-integrity
-          team: data-platform
-          market_standard: zero-import-errors
-        annotations:
-          summary: "Erros de importação de DAG detectados"
-          description: "{{ $value }} erro(s) de importação de DAG. Padrão é zero erros."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/dag-import-errors"
-
-      # Critical DAG não executou no prazo esperado
-      - alert: AirflowCriticalDAGNotExecuted
-        expr: |
-          (time() - max by (dag_id) (af_agg_ti_start{dag_id=~".*critical.*|.*daily.*|.*hourly.*"})) > 7200
-        for: 15m
-        labels:
-          severity: critical
-          component: critical-dag-execution
-          team: data-platform
-          market_standard: dag-execution-timeliness
-          business_impact: high
-        annotations:
-          summary: "DAG crítica não executou no prazo"
-          description: "DAG crítica {{ $labels.dag_id }} não iniciou execução há mais de 2 horas."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/critical-dag-not-executed"
-
-      # High task retry rate (market standard)
-      - alert: AirflowHighTaskRetryRateMarket
-        expr: |
-          (
-            sum by (dag_id) (rate(af_agg_ti_finish{state="up_for_retry"}[2h])) /
-            sum by (dag_id) (rate(af_agg_ti_finish[2h]))
-          ) > 0.10
-        for: 1h
-        labels:
-          severity: warning
-          component: task-stability
-          team: data-platform
-          market_standard: retry-rate-threshold
-        annotations:
-          summary: "Alta taxa de retry no DAG {{ $labels.dag_id }}"
-          description: "DAG {{ $labels.dag_id }} com {{ $value | humanizePercentage }} de retry rate. Padrão de mercado é < 10%."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/high-retry-rate"
-
-      # Executor utilization > 90% (capacity planning)
-      - alert: AirflowExecutorUtilizationHigh
-        expr: |
-          (af_agg_executor_running_tasks / (af_agg_executor_running_tasks + af_agg_executor_open_slots)) > 0.90
-        for: 20m
-        labels:
-          severity: warning
-          component: capacity-planning
-          team: data-platform
-          market_standard: executor-utilization
-        annotations:
-          summary: "Utilização do executor acima de 90%"
-          description: "Executor com {{ $value | humanizePercentage }} de utilização. Considerar scaling."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/executor-high-utilization"
-
-      # Long running DAG (> 4 hours)
-      - alert: AirflowLongRunningDAG
-        expr: af_agg_dagrun_duration_success > 14400000  # 4 hours in milliseconds
-        for: 30m
-        labels:
-          severity: warning
-          component: dag-performance
-          team: data-platform
-          market_standard: dag-duration-limit
-        annotations:
-          summary: "DAG com execução muito longa"
-          description: "DAG {{ $labels.dag_id }} levou {{ $value | humanizeDuration }} para completar. Considerar otimização."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/long-running-dag"
-
-      # Database connection issues (proxy via task failures)
-      - alert: AirflowDatabaseConnectionIssues
-        expr: |
-          increase(af_agg_ti_failures[15m]) > 10 and 
-          increase(af_agg_scheduler_heartbeat[15m]) == 0
-        for: 5m
-        labels:
-          severity: critical
-          component: database-connectivity
-          team: data-platform
-          market_standard: database-reliability
-        annotations:
-          summary: "Possível problema de conectividade com banco de dados"
-          description: "Alto número de falhas ({{ $value }}) e scheduler sem heartbeat. Pode ser problema de BD."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/database-connection"
-
-      # Worker health (for environments with workers)
-      - alert: AirflowWorkerHealthIssue
-        expr: |
-          af_agg_executor_running_tasks == 0 and 
-          af_agg_executor_queued_tasks > 5
-        for: 10m
-        labels:
-          severity: critical
-          component: worker-health
-          team: data-platform
-          market_standard: worker-availability
-        annotations:
-          summary: "Workers podem estar indisponíveis"
-          description: "{{ $value }} tasks em fila mas nenhuma executando. Workers podem estar down."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/worker-health"
-
-      # Memory/Resource pressure indicator
-      - alert: AirflowResourcePressure
-        expr: |
-          af_agg_scheduler_critical_section_duration > 60000 and  # 1 minute
-          af_agg_executor_queued_tasks > 20
-        for: 15m
-        labels:
-          severity: warning
-          component: resource-pressure
-          team: data-platform
-          market_standard: resource-efficiency
-        annotations:
-          summary: "Indicadores de pressão de recursos"
-          description: "Seção crítica lenta ({{ $value }}ms) e fila alta. Possível pressão de recursos."
-          runbook_url: "https://wiki.company.com/airflow/runbooks/resource-pressure"
+  airflow-sla-monitoring.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "gnetId": null,
+      "graphTooltip": 0,
+      "id": 9,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [],
+          "title": "SLA Overview",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 0,
+            "y": 1
+          },
+          "id": 101,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 20,
+              "valueSize": 60
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "sum(af_agg_sla_miss{airflow_id=\"$airflow_id\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Total SLA Misses",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 8,
+            "y": 1
+          },
+          "id": 102,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 20,
+              "valueSize": 60
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "sum(increase(af_agg_sla_miss{airflow_id=\"$airflow_id\"}[24h]))",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "SLA Misses (24h)",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {},
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 16,
+            "y": 1
+          },
+          "id": 103,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {
+              "titleSize": 20,
+              "valueSize": 60
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "sum(af_agg_sla_email_notification_failure{airflow_id=\"$airflow_id\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "SLA Notification Failures",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "datasource": null,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 7
+          },
+          "id": 200,
+          "panels": [],
+          "title": "SLA Details",
+          "type": "row"
+        },
+        {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": null,
+                "displayMode": "auto",
+                "filterable": true
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "SLA Misses"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          },
+          "id": 201,
+          "options": {
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "SLA Misses"
+              }
+            ]
+          },
+          "pluginVersion": "7.3.5",
+          "targets": [
+            {
+              "expr": "af_agg_sla_miss{airflow_id=\"$airflow_id\"}",
+              "format": "table",
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "SLA Misses by DAG and Task",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "airflow_id": true,
+                  "instance": true,
+                  "job": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "SLA Misses",
+                  "dag_id": "DAG ID",
+                  "task_id": "Task ID"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 26,
+      "style": "dark",
+      "tags": [
+        "airflow",
+        "sla",
+        "monitoring"],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {
+              "selected": false,
+              "text": "airflow",
+              "value": "airflow"
+            },
+            "datasource": "Prometheus",
+            "definition": "label_values(airflow_id)",
+            "error": null,
+            "hide": 0,
+            "includeAll": false,
+            "label": "Airflow Instance Id",
+            "multi": false,
+            "name": "airflow_id",
+            "options": [],
+            "query": "label_values(airflow_id)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Airflow SLA Monitoring Dashboard",
+      "uid": "airflow-sla-monitoring",
+      "version": 1
+    }
 ---
 # Grafana PVC
 apiVersion: v1
