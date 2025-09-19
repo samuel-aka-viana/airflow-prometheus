@@ -47,38 +47,33 @@ Certifique-se de ter o **Docker** e o **Docker Compose** instalados em seu ambie
 Assim que as DAGs estiverem em execução, o Prometheus coletará as métricas e o Grafana exibirá essas informações em dashboards interativos. Dois dashboards padrão do Airflow já estão configurados no Grafana, oferecendo uma visão detalhada do status das DAGs, duração das tarefas, erros e uso de recursos.
 
 
-# Delete deployments
-kubectl delete deployments  -n airflow --all
-kubectl delete deployments --all-namespaces | grep airflow
+minikube start -p minikube --driver=docker
+minikube update-context -p minikube
+kubectl config use-context minikube
 
-# Delete services
-kubectl delete services  -n airflow --all
-kubectl delete services --all-namespaces | grep airflow
+minikube status -p minikube
+kubectl cluster-info
+kubectl get nodes
 
-# Delete pods (if any are stuck)
-kubectl delete pods  -n airflow --all
-kubectl delete pods --all-namespaces | grep airflow
 
-# Delete statefulsets
-kubectl delete statefulsets  -n airflow --all
-kubectl delete statefulsets --all-namespaces | grep airflow
+# Delete the Helm release
+helm uninstall airflow -n airflow
 
-# Delete persistent volume claims
-kubectl delete pvc  -n airflow --all
-kubectl delete pvc --all-namespaces | grep airflow
+# Wait a moment, then delete any remaining resources
+kubectl delete all --all -n airflow
 
-# Delete persistent volumes
-kubectl delete pv -n airflow --all
+# Delete any persistent volume claims (this will delete your data!)
+kubectl delete pvc --all -n airflow
 
-# Delete configmaps
-kubectl delete configmaps -n airflow --all
-kubectl delete configmaps  -n airflow --all
+# Delete any remaining secrets and configmaps
+kubectl delete secret --all -n airflow
+kubectl delete configmap --all -n airflow
 
-# Delete secrets
-kubectl delete secrets -n airflow --all
-kubectl delete secrets  -n airflow --all
+# Delete any jobs that might be stuck
+kubectl delete job --all -n airflow
 
- kubectl delete job -n airflow airflow-run-airflow-migrations
+# If there are any stuck finalizers, you can force delete pods
+kubectl delete pod --all -n airflow --force --grace-period=0
 
 
 # force finalize
@@ -89,7 +84,15 @@ for t in $(kubectl api-resources --verbs=list --namespaced -o name); do
 done
 
 
+kubeclt create ns airflow
+
+
 helm uninstall airflow -n airflow
+
+kubectl create secret generic airflow-postgresql-secret \
+  --from-literal=password=airflow \
+  --from-literal=postgres-password=airflow \
+  -n airflow
 
 
 helm upgrade --install airflow apache-airflow/airflow -n airflow -f infra/values.yaml

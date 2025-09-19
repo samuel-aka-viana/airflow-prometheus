@@ -13,6 +13,11 @@ config:
     fernet_key: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
     dags_are_paused_at_creation: true
     load_examples: false
+    # Explicitly specify the database connection to use airflow user
+    sql_alchemy_conn: "postgresql+psycopg2://airflow:airflow@airflow-postgresql:5432/airflow"
+  database:
+    # Override any default database connection settings
+    sql_alchemy_conn: "postgresql+psycopg2://airflow:airflow@airflow-postgresql:5432/airflow"
   api:
     auth_backends: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
   scheduler:
@@ -36,6 +41,16 @@ config:
     delete_worker_pods_on_failure: false
 
 webserverSecretKey: "UldaM1dEZGlZVzVuZERCeVlrUjBSR2xHTTNsR1prdGtjWE5EYUhONWNYaz0="
+
+# Override the data connection for all components
+data:
+  metadataConnection:
+    user: airflow
+    pass: airflow
+    protocol: postgresql
+    host: airflow-postgresql
+    port: 5432
+    db: airflow
 
 dags:
   persistence:
@@ -65,10 +80,6 @@ postgresql:
 # Redis is not needed with KubernetesExecutor
 redis:
   enabled: false
-
-# Workers are not needed with KubernetesExecutor - pods are created on demand
-#workers:
-#  enabled: false
 
 scheduler:
   replicas: 1
@@ -149,46 +160,3 @@ rbac:
         - "delete"
         - "list"
         - "watch"
-
-# Pod template for worker pods (optional customization)
-#workers:
-#  podTemplate: |
-#    apiVersion: v1
-#    kind: Pod
-#    metadata:
-#      name: placeholder-name
-#      labels:
-#        tier: airflow
-#        component: worker
-#        release: airflow
-#    spec:
-#      restartPolicy: Never
-#      serviceAccountName: airflow-worker
-#      containers:
-#        - name: base
-#          image: apache/airflow:2.10.5
-#          imagePullPolicy: IfNotPresent
-#          args: []
-#          ports:
-#            - name: worker-logs
-#              containerPort: 8793
-#          resources:
-#            limits:
-#              cpu: 1000m
-#              memory: 2Gi
-#            requests:
-#              cpu: 500m
-#              memory: 1Gi
-#          volumeMounts:
-#            - name: config
-#              mountPath: /opt/airflow/airflow.cfg
-#              subPath: airflow.cfg
-#              readOnly: true
-#            - name: config
-#              mountPath: /opt/airflow/config/airflow_local_settings.py
-#              subPath: airflow_local_settings.py
-#              readOnly: true
-#      volumes:
-#        - name: config
-#          configMap:
-#            name: airflow-config
