@@ -711,6 +711,9 @@ spec:
       labels:
         app: prometheus
     spec:
+      securityContext:
+        fsGroup: 65534
+        runAsUser: 65534
       containers:
         - name: prometheus
           image: prom/prometheus:latest
@@ -774,6 +777,9 @@ data:
         url: http://prometheus:9090
         isDefault: true
         editable: true
+      - name: Cloud-Monitoring  
+        type: prometheus
+        url: https://monitoring.googleapis.com/v1/projects/YOUR_PROJECT/location/global/prometheus
 ---
 # Grafana ConfigMap for Dashboard Provisioning
 apiVersion: v1
@@ -3772,9 +3778,12 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
       containers:
         - name: grafana
-          image: grafana/grafana:8.2.4
+          image: grafana/grafana:8.5.27
           ports:
             - containerPort: 3000
           env:
@@ -3832,3 +3841,5 @@ spec:
     - name: http
       port: 3000
       targetPort: 3000
+
+

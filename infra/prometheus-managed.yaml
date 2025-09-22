@@ -1,0 +1,18 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: airflow
+  labels:
+    app.kubernetes.io/name: airflow
+    app.kubernetes.io/part-of: google-cloud-managed-prometheus
+spec:
+  endpoints:
+  - port: 9102
+    scheme: http
+    interval: 30s
+    path: /metrics
+  selector:
+    matchLabels:
+      tier: airflow
+      component: airflow-statsd
+      release: airflow
