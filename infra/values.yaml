@@ -152,6 +152,8 @@ webserver:
 triggerer:
   enabled: true
   replicas: 1
+  persistence:
+    enabled: false
 
 statsd:
   enabled: true
@@ -199,5 +201,6 @@ spec:
     path: /metrics
   selector:
     matchLabels:
+      app: airflow
       component: statsd
       release: airflow

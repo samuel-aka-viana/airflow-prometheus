@@ -102,6 +102,7 @@ helm upgrade --install airflow apache-airflow/airflow \
 kubectl -n airflow port-forward deployment/airflow-webserver 8080:8080
 kubectl -n airflow port-forward svc/prometheus 9090:9090
 kubectl -n airflow port-forward svc/grafana 3000:3000
+kubectl -n airflow port-forward svc/airflow-statsd 9102:9102
 ```
 
 ---

@@ -14,5 +14,6 @@ spec:
     path: /metrics
   selector:
     matchLabels:
+      tier: airflow
       component: statsd
       release: airflow
