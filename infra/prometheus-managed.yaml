@@ -1,7 +1,8 @@
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
-  name: airflow
+  name: airflow-statsd
+  namespace: airflow
   labels:
     app.kubernetes.io/name: airflow
     app.kubernetes.io/part-of: google-cloud-managed-prometheus
@@ -13,6 +14,5 @@ spec:
     path: /metrics
   selector:
     matchLabels:
-      tier: airflow
-      component: airflow-statsd
+      component: statsd
       release: airflow
